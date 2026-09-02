@@ -151,6 +151,9 @@ See **Limits that travel with the number** under Honesty — the density, base-r
 
 - the classification denominator and the scored population size
 - units excluded from scoring and why (36 same-axis compound units)
+- **bank rows that could not be keyed** (4) — rows with no extractable UTR are
+  excluded from the Level 0 duplicate check and can only reach Level 3 through the
+  inferred fallback. That is a real limit on coverage, not an implementation detail
 - the full honesty clause, verbatim
 - fault-carrying-only breakdown alongside the all-units breakdown
 
@@ -187,6 +190,23 @@ Each of these was raised with the owner and approved before any code was written
   reported 100% while doing no work. We ship a **Level 0 integrity pass plus two
   matching levels** (payment axis, and settlement↔bank axis). This project does not
   claim a three-level matcher.
+- **Level 3 tie-break policy.** With a UTR present the match is *keyed*. With the UTR
+  missing, the fallback searches bank rows carrying no extractable UTR for one within
+  both the amount tolerance and the date window. **Ambiguous means more than one row
+  satisfies both conditions**, and an ambiguous settlement is an **unmatched record**
+  routed by R1 or R3 — never a pick. No nearest-neighbour, no first-in-file, no
+  lowest-id: any of those makes the result depend on row order, and an irreproducible
+  `sealed_eval` is worse than an unmatched record. `UNMATCHED_AMBIGUOUS` and
+  `UNMATCHED_NO_CANDIDATE` are recorded separately so the evidence distinguishes
+  "two possible" from "none found".
+
+  On this dataset the ambiguous branch **never fires** — all 4 `missing_utr`
+  settlements resolve to exactly one candidate. Like `TOLERANCE_PAISE`, it is
+  fixture-tested rather than exercised by batch data, and reported that way.
+- **Level 1 consumes Level 0 rather than re-deriving.** Duplicate status arrives as a
+  set of flagged payment ids; if Level 1 recomputed it the two could drift and the
+  cascade would see inconsistent evidence for one record. A test mutates a Level 0
+  finding both ways and asserts Level 1's output follows.
 - **Level 0 added.** Duplicate detection, run before the matching levels. SPEC 5
   declares Level 1 and Level 3 as 1:1 joins, but `duplicate_ledger_entry` produces 1:2
   — a 1:1 join would silently dedup and never detect the fault it was graded on.
