@@ -94,6 +94,23 @@ class GroundTruth:
 
 
 @dataclass(frozen=True)
+class SettlementTruth:
+    """Gap-axis ground truth at settlement grain, recorded at injection time.
+
+    Unit-level GroundTruth mixes axes -- a compound payment's rupee_impact_paise
+    includes its ledger duplicate -- so attribution cannot be scored against it. This
+    records what the generator did to the settlement-to-bank arithmetic alone: the gap
+    it created against the CONTRACTED baseline, and how that gap decomposes.
+    """
+
+    settlement_id: str
+    gap_faults: tuple[str, ...]
+    expected_gap_paise: int
+    expected_attribution: tuple[tuple[str, int], ...]   # cause -> signed paise
+    expected_unexplained_paise: int
+
+
+@dataclass(frozen=True)
 class Dataset:
     seed: int
     as_of: date
@@ -108,3 +125,4 @@ class Dataset:
     bank_rows: list[BankRow] = field(default_factory=list)
     ledger: list[LedgerEntry] = field(default_factory=list)
     truth: list[GroundTruth] = field(default_factory=list)
+    settlement_truth: list[SettlementTruth] = field(default_factory=list)

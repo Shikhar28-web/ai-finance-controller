@@ -40,6 +40,7 @@ from afc.core.models import (
     RateCard,
     Refund,
     Settlement,
+    SettlementTruth,
 )
 from afc.generate import plan
 from afc.money import net_per_payment_paise
@@ -242,10 +243,12 @@ def generate(seed: int, targets: plan.Targets = plan.DEFAULT) -> Dataset:
 
         # Bank side.
         credited = expected
+        mismatch = 0
         if "bank_amount_mismatch_material" in sfaults:
-            credited -= plan.MATERIAL_MISMATCH_PAISE
+            mismatch = plan.MATERIAL_MISMATCH_PAISE
         if "bank_amount_mismatch_bounded" in sfaults:
-            credited -= plan.BOUNDED_MISMATCH_PAISE
+            mismatch = plan.BOUNDED_MISMATCH_PAISE
+        credited -= mismatch
         absent = bool(sfaults & {"bank_credit_missing", "timing_lag", "timing_overdue"})
         if not absent:
             narration = f"NEFT/{utr or 'NA'}/RAZORPAY SETTLEMENT"
@@ -256,6 +259,37 @@ def generate(seed: int, targets: plan.Targets = plan.DEFAULT) -> Dataset:
                     BankRow(f"bank_{seed}_{n_bank:05d}", due_on, narration, credited)
                 )
                 n_bank += 1
+
+            # Gap-axis ground truth, against the CONTRACTED baseline the decomposer
+            # recomputes from (SPEC 6 step 1). Signed as contributions to
+            # (actual - expected_at_contracted), so the parts sum to the gap.
+            members_p = [p for p in ds.payments if p.settlement_id == sid]
+            refunds_here = sum(
+                r.amount_paise for r in ds.refunds
+                if r.payment_id in {p.payment_id for p in members_p}
+            )
+            contracted = sum(
+                net_per_payment_paise(p.gross_paise, CONTRACTED_MDR_BPS, GST_ON_FEE_BPS)
+                for p in members_p
+            ) - refunds_here
+            actual_total = credited * (2 if "duplicate_bank_credit" in sfaults else 1)
+            attribution: list[tuple[str, int]] = []
+            if "fee_rate_drift" in sfaults:
+                attribution.append(("fee_rate_drift", expected - contracted))
+            if "duplicate_bank_credit" in sfaults:
+                attribution.append(("duplicate_bank_credit", credited))
+            ds.settlement_truth.append(SettlementTruth(
+                settlement_id=sid,
+                gap_faults=tuple(sorted(
+                    f.replace("_material", "").replace("_bounded", "")
+                    for f in sfaults
+                    if f.startswith(("fee_rate_drift", "duplicate_bank_credit",
+                                     "bank_amount_mismatch"))
+                )),
+                expected_gap_paise=actual_total - contracted,
+                expected_attribution=tuple(attribution),
+                expected_unexplained_paise=-mismatch,
+            ))
 
     # Orphan bank credits: no settlement, no payment, their own recon units.
     for i in range(targets.orphans):

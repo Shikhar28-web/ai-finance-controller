@@ -145,12 +145,29 @@ can carry. It does not gate the build.
 
 See **Limits that travel with the number** under Honesty — the density, base-rate and composition caveats are reported with the accuracy figure, not here.
 
+### Fixture-tested, not batch-exercised
+
+These paths are implemented and unit-tested, but no record in the dataset reaches
+them. Listed together rather than scattered, because each one is a place where a
+reported number says less than it appears to.
+
+| Path | Why it never fires |
+|---|---|
+| `TOLERANCE_PAISE` in R8 | generator and classifier share arithmetic, so a clean gap is exactly 0 and every injected fault clears ₹1 by more than an order of magnitude |
+| Level 3 `UNMATCHED_AMBIGUOUS` | all 4 `missing_utr` settlements resolve to exactly one candidate |
+| `refund_variance` (§6 step 3) | refunds are consistent across Razorpay and bank; `refund_not_in_ledger` is a ledger-axis fault and produces no bank gap |
+| `adjustment_variance` (§6 step 4) | `adjustment_unexplained` was cut, and no adjustment rows exist |
+| `rounding_variance` (§6 step 6) | the residual is exactly 0 — generator and classifier compute per-payment net identically, which is the coupling the honesty clause names |
+
 ### Required in every metrics output
 
 `metrics_summary.json` must carry these as visible lines, not README-only prose:
 
 - the classification denominator and the scored population size
 - units excluded from scoring and why (36 same-axis compound units)
+- `DECOMPOSITION_FAILED` records — settlements whose closure invariant failed, routed
+  to UNRESOLVED rather than taking the batch down
+- `exact_cause_set_match_rate` and `rupee_attribution_error`, on both splits
 - **bank rows that could not be keyed** (4) — rows with no extractable UTR are
   excluded from the Level 0 duplicate check and can only reach Level 3 through the
   inferred fallback. That is a real limit on coverage, not an implementation detail
@@ -200,9 +217,13 @@ Each of these was raised with the owner and approved before any code was written
   `UNMATCHED_NO_CANDIDATE` are recorded separately so the evidence distinguishes
   "two possible" from "none found".
 
-  On this dataset the ambiguous branch **never fires** — all 4 `missing_utr`
-  settlements resolve to exactly one candidate. Like `TOLERANCE_PAISE`, it is
-  fixture-tested rather than exercised by batch data, and reported that way.
+- **Modelling decision: the ledger is compared against net at the APPLIED rate**, not
+  the contracted one. A merchant books what actually reached the bank, so
+  `fee_rate_drift` stays a gap-axis fault and is not also counted as a ledger
+  disagreement. The consequence is large and deliberate: ledger disagreements are
+  **31**, not **130**. Booking against the contracted rate would make fee drift a
+  legitimate two-axis fault and change the ground truth accordingly; that is a
+  different model of the merchant, not a bug fix.
 - **Level 1 consumes Level 0 rather than re-deriving.** Duplicate status arrives as a
   set of flagged payment ids; if Level 1 recomputed it the two could drift and the
   cascade would see inconsistent evidence for one record. A test mutates a Level 0
@@ -337,6 +358,18 @@ reported with them.
   distribution — not to an unseen fault mix. It is named for exactly what it does.
 - **EXPLAINED rests on one fault class.** `fee_rate_drift` is its only source, 28
   units, so that diagonal cell rests on a single generator behaviour.
+- **Attribution scores 1.0000 with 0 paise of error, and that is a construction
+  artifact, not a capability.** `exact_cause_set_match_rate` is 36/36 on both splits
+  and `rupee_attribution_error` is exactly 0. The generator and the decomposer compute
+  fee and GST from the same integer arithmetic, and the decomposer's cause list is the
+  same closed set as the generator's fault list, so there is no cause it can fail to
+  recognise. A real settlement file would contain causes outside that set, and the
+  first honest signal of this system's attribution quality would come from one.
+- **The closure invariant is algebraically guaranteed by the current implementation**,
+  because `unexplained` is defined as the residual after named causes. It cannot fire
+  on today's code. It is kept as a guard against future edits — and against a
+  refactor that starts attributing against the running residual rather than the
+  contracted baseline — not as a live check that is passing.
 - **The answer key and the classifier share an author.** The fault-to-state ground
   truth was written from the SPEC 4 fault definitions and the SPEC 7 table alone and
   committed to git before the classifier existed — the history, not an assertion, is
