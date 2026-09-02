@@ -340,6 +340,12 @@ number is qualified* — same disclosure, and nothing is behind that click which
 not also in two plaintext files. Rendered from `afc/config.py`; the split is
 asserted to reconstitute the full text exactly.
 
+**[FINDINGS.md](FINDINGS.md) — 19 real defects this process caught, in the order
+caught.** Read it before the scores. Every metric here will read as perfect for the
+construction reasons below, and a page of 100% figures is what you would expect from a
+system that works *and* from one that is merely self-consistent; the scores cannot tell
+you which. The defects can.
+
 ### Limits that travel with the number
 
 These are not methodology footnotes. Any accuracy figure from this system is
