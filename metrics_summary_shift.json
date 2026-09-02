@@ -1,0 +1,231 @@
+{
+  "metrics": {
+    "split": "shift",
+    "seed": 2027,
+    "targets": "distribution_shift",
+    "denominator": "recon_unit: one per payment, one per orphan bank credit, one per payment-less settlement",
+    "population_total": 530,
+    "population_scored": 512,
+    "units_excluded_same_axis_compounds": 18,
+    "unkeyed_bank_rows": 2,
+    "decomposition_failures": 0,
+    "confusion": {
+      "labels": [
+        "VERIFIED",
+        "EXPLAINED",
+        "AWAITING_BANK",
+        "HUMAN_REVIEW",
+        "UNRESOLVED"
+      ],
+      "matrix_true_by_predicted": [
+        [
+          268,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          16,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          16,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          70,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          142
+        ]
+      ],
+      "scored": 512,
+      "correct": 512,
+      "accuracy": 1.0,
+      "per_state": {
+        "VERIFIED": {
+          "support": 268,
+          "predicted": 268,
+          "true_positives": 268,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "EXPLAINED": {
+          "support": 16,
+          "predicted": 16,
+          "true_positives": 16,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "AWAITING_BANK": {
+          "support": 16,
+          "predicted": 16,
+          "true_positives": 16,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "HUMAN_REVIEW": {
+          "support": 70,
+          "predicted": 70,
+          "true_positives": 70,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "UNRESOLVED": {
+          "support": 142,
+          "predicted": 142,
+          "true_positives": 142,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    "confusion_fault_carrying_only": {
+      "labels": [
+        "VERIFIED",
+        "EXPLAINED",
+        "AWAITING_BANK",
+        "HUMAN_REVIEW",
+        "UNRESOLVED"
+      ],
+      "matrix_true_by_predicted": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          16,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          16,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          70,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          142
+        ]
+      ],
+      "scored": 244,
+      "correct": 244,
+      "accuracy": 1.0,
+      "per_state": {
+        "VERIFIED": {
+          "support": 0,
+          "predicted": 0,
+          "true_positives": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "EXPLAINED": {
+          "support": 16,
+          "predicted": 16,
+          "true_positives": 16,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "AWAITING_BANK": {
+          "support": 16,
+          "predicted": 16,
+          "true_positives": 16,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "HUMAN_REVIEW": {
+          "support": 70,
+          "predicted": 70,
+          "true_positives": 70,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "UNRESOLVED": {
+          "support": 142,
+          "predicted": 142,
+          "true_positives": 142,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    "attribution": {
+      "settlements_scored": 36,
+      "exact_cause_set_match_rate": 1.0,
+      "exact_cause_set_matches": 36,
+      "decomposition_failures": 0,
+      "rupee_attribution_error_paise": 0,
+      "rupee_attribution_error_rate": 0.0,
+      "true_gap_magnitude_paise": 24419687
+    },
+    "coverage_terminal_without_human": 0.554688,
+    "routing": {
+      "ai_suggestion_human_confirms": 202,
+      "auto_reconcile": 268,
+      "human_review_queue": 60
+    },
+    "thresholds": {
+      "auto": 0.9,
+      "review": 0.6
+    },
+    "rupees": {
+      "auto_reconciled_correct": 0,
+      "auto_reconciled_wrong_cost_of_false_positives": 0,
+      "sent_to_human_review": 14251500,
+      "unresolved": 5321098
+    },
+    "honesty_clause": "The data generator and the classifier share the same fee arithmetic, so single-cause faults are correct by construction. This score demonstrates internal coherence, not that the system would survive a real settlement file. The decomposer's cause list and the generator's fault list are the same closed set, so unexplained_amount is near-zero by construction and \u201cunknown is a valid answer\u201d is demonstrated here rather than stress-tested. A real settlement file would contain causes neither list anticipates. The fault-to-state ground truth this matrix is scored against was authored by us, from the same model of correctness as the classifier."
+  },
+  "ai_note": {
+    "text": "Classified 512 reconciliation units; 512 matched the recorded ground-truth state.",
+    "ai_generated": true
+  },
+  "run_meta": {
+    "wall_clock_seconds": 0.016,
+    "records_per_second": 33121.7,
+    "git_sha": "125371b",
+    "generated_at_unix": 1788333052
+  }
+}

@@ -1,21 +1,127 @@
 # AI Finance Controller
 
-**Every rupee gets a verified trail.**
+Reconciliation across three sources — Razorpay, the merchant's bank statement, and the
+merchant's ledger — that names an arithmetic-proven cause for every difference and an
+honest exception list for everything it cannot explain.
 
-Reconciliation across three sources — Razorpay, the merchant's bank statement, and
-the merchant's ledger — with a named, arithmetic-proven cause for every difference
-and an honest exception list for everything it cannot explain.
+```bash
+make metrics
+```
 
-> Razorpay tells you where the money went. We prove that the books agree.
+One command, no dependencies, no API key. Writes `metrics_summary.json`.
+
+---
+
+## The numbers, with what qualifies them
+
+Measured on `sealed_eval`, seed `1337`, run once. Dev seed `42` produced the same
+figures; the distribution-shift split (seed `2027`, burned) also produced 1.0000.
+
+| | |
+|---|---|
+| **Accuracy** | **1.0000** (482/482 recon units), all five states |
+| Attribution | `exact_cause_set_match_rate` 1.0000 (36/36), `rupee_attribution_error` 0 paise |
+| Coverage | **41.5%** reach a terminal state without a human |
+| Cost of false positives | ₹0.00 |
+| Throughput | ~24,000 records/sec (518 units in 0.02s) |
+
+**Read the accuracy as internal coherence, not capability.** Four things make 1.0000 the
+expected result rather than a good one, and they are not caveats — they are the reason
+the number looks like this:
+
+1. **The generator and the classifier share the same fee arithmetic.** Single-cause
+   faults are correct by construction.
+2. **The decomposer's cause list is the same closed set as the generator's fault list.**
+   There is no cause it can fail to recognise, so `unexplained_amount` is near-zero by
+   construction and "unknown is a valid answer" is demonstrated rather than tested.
+3. **~64% of scored units carry a fault**, against roughly 5% in a real merchant file.
+   The density is what makes every fault class measurable at a 15-unit floor; it also
+   makes this number non-comparable to accuracy on a real file.
+4. **The answer key's independence from the classifier is unverifiable.** The decision
+   cascade was designed before the answer key was written and was in context throughout.
+
+**Coverage is 41.5% because the system is built to refuse.** Only `VERIFIED` and
+`EXPLAINED` are auto-reconcilable; everything else routes to a human by design. A
+duplicated bank credit is fully attributable and still goes to review, because
+attributing a gap is not the same as the gap being benign. Rupees at risk are stated
+rather than absorbed: ₹424,388 to human review, ₹111,000 unresolved, ₹0 wrongly
+auto-reconciled.
+
+> The data generator and the classifier share the same fee arithmetic, so single-cause
+> faults are correct by construction. This score demonstrates internal coherence, not
+> that the system would survive a real settlement file.
+
+Full five-sentence clause in [`metrics_summary.json`](metrics_summary.json) and under
+[Honesty](#honesty).
+
+---
+
+## → [FINDINGS.md](FINDINGS.md) — 21 defects this process caught, and why a perfect score is not evidence
+
+**This is the document worth reading.** The scores above cannot distinguish a system
+that works from one that is merely self-consistent. The defects can. Each entry has what
+was wrong, how it was found, what it would have done to the reported number, and the
+commit that fixed it — including defects in the spec itself, and my own errors.
+
+A sample of what is in there:
+
+- Grouping bank rows by narration invented a duplicate that does not exist, which would
+  have routed four settlements to `HUMAN_REVIEW` and read as a classifier result rather
+  than a grouping bug.
+- `round(gross * mdr_rate)` is wrong two different ways, and which one bites depends on
+  the rate — so it survives casual testing and lands in exactly the rounding bucket it
+  would be scored against.
+- The §7 decision table matched **zero rows** for a bank-reconciling settlement with a
+  duplicated ledger entry: 137 units with no state.
+- §5's Level 2 was tautological — it would have reported 100% while doing no work.
+- The mandated §3 firewall test would have passed vacuously.
+
+It closes with an analysis of why the zero-diff between answer key and classifier is
+**not** validation.
+
+---
+
+## The strongest sequence: proving what it knows, then admitting what it doesn't
+
+```
+EXPLAINED     setl_42_0010   expected Rs 24,666.32   actual Rs 24,602.44   gap -Rs 63.88
+              attributed  fee_rate_drift  -Rs 63.88
+                          "MDR 2.10% applied vs contracted 1.90% across 11 payments"
+              unexplained Rs 0.00                          confidence 0.889 (8 of 9 checks)
+
+HUMAN_REVIEW  setl_42_0006   expected Rs 51,678.78   actual Rs 51,636.78   gap -Rs 42.00
+              attributed  none
+              unexplained -Rs 42.00                        confidence 0.778 (7 of 9 checks)
+              failed checks: amount_within_tol, gap_fully_attributed
+```
+
+The second record is the product. Every named cause was checked and none accounts for
+₹42.00, so the gap stays unexplained, the record goes to a human, and **no cause is
+invented to close it**. `unexplained_amount` is a first-class answer, not a failure.
+
+---
+
+## Running it
+
+```bash
+make metrics                        # dev split -> metrics_summary.json
+python3 tools/run_metrics.py sealed_eval    # the sealed evaluation split
+python3 tools/run_metrics.py shift          # distribution-shift, secondary
+python3 tools/census.py                     # fault census
+
+make setup && make check            # dev tooling: ruff, firewall linter, 257 tests
+```
+
+Python 3.12, standard library only. `make setup` installs `pytest` and `ruff` for the
+test suite; the pipeline itself needs neither, and runs with no LLM and no API key.
+
+---
 
 ## Status
 
-Scaffold, firewall and CI only. No accuracy number exists yet. When one does, it
-appears here alongside the honesty clause below, and never on its own.
-
-```bash
-make check     # ruff -> firewall -> README sync -> pytest
-```
+Steps 1–6 of the §10 priority list, which is the minimum shippable demo. Steps 7–10
+(dashboard, truth graph, Razorpay adapter, copilot) are not built. Step 9 was cut
+explicitly: no test-mode credentials, and it sits below the protected line.
 
 ## The one architectural rule
 
@@ -122,6 +228,12 @@ re-running one already seen, and the burn is logged here.
 
 **Reserve seeds burned: 1** — `2027`, opened to build the distribution-shift split
 below. One reserve remains (`3119`).
+
+**`sealed_eval` runs: 1.** Seed `1337`, executed once at commit `125371b` with a clean
+working tree and nothing changed between seeing the dev numbers and running it. Result:
+accuracy 1.0000 (482/482), attribution 1.0000, 0 paise error — identical to dev, which
+is the expected outcome given both splits share a fault distribution. Written to
+`metrics_summary_sealed_eval.json`.
 
 ### Distribution shift (secondary)
 
@@ -339,12 +451,6 @@ the first next to the number, with the rest behind an expand labelled *why this
 number is qualified* — same disclosure, and nothing is behind that click which is
 not also in two plaintext files. Rendered from `afc/config.py`; the split is
 asserted to reconstitute the full text exactly.
-
-**[FINDINGS.md](FINDINGS.md) — 21 real defects this process caught, in the order
-caught.** Read it before the scores. Every metric here will read as perfect for the
-construction reasons below, and a page of 100% figures is what you would expect from a
-system that works *and* from one that is merely self-consistent; the scores cannot tell
-you which. The defects can.
 
 ### Limits that travel with the number
 
