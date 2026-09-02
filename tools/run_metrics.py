@@ -112,6 +112,13 @@ def build(split: str, narrator=None) -> dict:
             "population_total": len(ds.truth),
             "population_scored": matrix.scored,
             "units_excluded_same_axis_compounds": excluded,
+            "units_excluded_reason":
+                "Compound faults whose two components perturb the same axis. Their "
+                "true state would depend on how the decomposer attributes across "
+                "baselines rather than on what was injected, so an answer key cannot "
+                "contain them. They are GENERATED in both splits -- dev and "
+                "sealed_eval differ by seed alone -- and excluded here at scoring "
+                "time. See afc/core/faults.py DEV_ONLY_PAIRS.",
             "unkeyed_bank_rows": len(result.integrity_report.unkeyed_bank_rows),
             "decomposition_failures": failures,
             "confusion": matrix.as_dict(),

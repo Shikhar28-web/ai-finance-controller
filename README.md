@@ -1,83 +1,57 @@
 # AI Finance Controller
 
-Reconciliation across three sources — Razorpay, the merchant's bank statement, and the
-merchant's ledger — that names an arithmetic-proven cause for every difference and an
-honest exception list for everything it cannot explain.
+Reconciliation across Razorpay, the bank statement and the merchant ledger: an
+arithmetic-proven cause for every difference, and an honest exception list for
+everything it cannot explain.
 
 ```bash
 make metrics
 ```
 
-One command, no dependencies, no API key. Writes `metrics_summary.json`.
+One command, no dependencies, no API key → `metrics_summary.json`.
 
----
+### → [FINDINGS.md](FINDINGS.md) — 23 defects this process caught, and why a perfect score is not evidence. **This is the document worth reading.**
 
-## The numbers, with what qualifies them
+## The numbers, and the four things that qualify them
 
-Measured on `sealed_eval`, seed `1337`, run once. Dev seed `42` produced the same
-figures; the distribution-shift split (seed `2027`, burned) also produced 1.0000.
+`sealed_eval`, seed `1337`, run once. Dev (`42`) and the distribution-shift split
+(`2027`) gave the same figures.
 
 | | |
 |---|---|
 | **Accuracy** | **1.0000** (482/482 recon units), all five states |
-| Attribution | `exact_cause_set_match_rate` 1.0000 (36/36), `rupee_attribution_error` 0 paise |
-| Coverage | **41.5%** reach a terminal state without a human |
-| Cost of false positives | ₹0.00 |
+| Attribution | cause-set match `1.0000` (36/36), rupee error `0` paise |
+| **Coverage** | **41.5%** reach a terminal state without a human — the system is built to refuse |
+| Cost of false positives | **₹0.00** |
 | Throughput | ~24,000 records/sec (518 units in 0.02s) |
 
-**Read the accuracy as internal coherence, not capability.** Four things make 1.0000 the
-expected result rather than a good one, and they are not caveats — they are the reason
-the number looks like this:
+**1.0000 is the expected result here, not a good one.** Four reasons, and they are not footnotes:
 
-1. **The generator and the classifier share the same fee arithmetic.** Single-cause
-   faults are correct by construction.
-2. **The decomposer's cause list is the same closed set as the generator's fault list.**
-   There is no cause it can fail to recognise, so `unexplained_amount` is near-zero by
-   construction and "unknown is a valid answer" is demonstrated rather than tested.
-3. **~64% of scored units carry a fault**, against roughly 5% in a real merchant file.
-   The density is what makes every fault class measurable at a 15-unit floor; it also
-   makes this number non-comparable to accuracy on a real file.
-4. **The answer key's independence from the classifier is unverifiable.** The decision
-   cascade was designed before the answer key was written and was in context throughout.
-
-**Coverage is 41.5% because the system is built to refuse.** Only `VERIFIED` and
-`EXPLAINED` are auto-reconcilable; everything else routes to a human by design. A
-duplicated bank credit is fully attributable and still goes to review, because
-attributing a gap is not the same as the gap being benign. Rupees at risk are stated
-rather than absorbed: ₹424,388 to human review, ₹111,000 unresolved, ₹0 wrongly
-auto-reconciled.
+1. **Generator and classifier share the same fee arithmetic** — single-cause faults are correct by construction.
+2. **The decomposer's cause list is the same closed set as the generator's fault list** — there is no cause it can fail to recognise.
+3. **~64% of scored units carry a fault**, against ~5% in a real merchant file — not comparable to production accuracy.
+4. **The answer key's independence is unverifiable** — the decision cascade was designed before the key was written.
 
 > The data generator and the classifier share the same fee arithmetic, so single-cause
 > faults are correct by construction. This score demonstrates internal coherence, not
 > that the system would survive a real settlement file.
 
 Full five-sentence clause in [`metrics_summary.json`](metrics_summary.json) and under
-[Honesty](#honesty).
+[Honesty](#honesty). Coverage is 41.5% because only `VERIFIED` and `EXPLAINED`
+auto-reconcile; a duplicated bank credit is fully attributable and still goes to a
+human. Rupees at risk are stated, not absorbed: ₹424,388 to review, ₹111,000
+unresolved, ₹0 wrongly auto-reconciled.
 
 ---
 
-## → [FINDINGS.md](FINDINGS.md) — 22 defects this process caught, and why a perfect score is not evidence
+## Viewing the results
 
-**This is the document worth reading.** The scores above cannot distinguish a system
-that works from one that is merely self-consistent. The defects can. Each entry has what
-was wrong, how it was found, what it would have done to the reported number, and the
-commit that fixed it — including defects in the spec itself, and my own errors.
+```bash
+open docs/index.html
+```
 
-A sample of what is in there:
-
-- Grouping bank rows by narration invented a duplicate that does not exist, which would
-  have routed four settlements to `HUMAN_REVIEW` and read as a classifier result rather
-  than a grouping bug.
-- `round(gross * mdr_rate)` is wrong two different ways, and which one bites depends on
-  the rate — so it survives casual testing and lands in exactly the rounding bucket it
-  would be scored against.
-- The §7 decision table matched **zero rows** for a bank-reconciling settlement with a
-  duplicated ledger entry: 137 units with no state.
-- §5's Level 2 was tautological — it would have reported 100% while doing no work.
-- The mandated §3 firewall test would have passed vacuously.
-
-It closes with an analysis of why the zero-diff between answer key and classifier is
-**not** validation.
+A single static page reading `metrics_summary.json`. No server, no build step; it
+computes nothing and says so when the JSON is missing.
 
 ---
 

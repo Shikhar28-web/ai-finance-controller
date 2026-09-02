@@ -383,6 +383,28 @@ directory.
 
 ---
 
+### 23. The metrics output named the exclusion but never gave its reason — **[impl]**
+
+**What was wrong.** `metrics_summary.json` carried
+`"units_excluded_same_axis_compounds": 36`. The key encodes the *category* of the
+excluded units but nothing in the file says *why* 36 records were dropped from the
+scored population. The reason lived only in the README and in `afc/core/faults.py`.
+
+**How it was found.** A verification pass asserting each required metrics line was
+present, rather than assuming the ones written earlier were complete.
+
+**What it would have done.** A reader working from `metrics_summary.json` alone — which
+is the file a judge is most likely to inspect — would see a denominator reduced by 36
+with no justification, which looks like records quietly dropped to improve a score.
+The actual reason is the opposite: their true state would depend on decomposer
+behaviour, so an answer key cannot contain them.
+
+**Fixed in.** `HEAD` — a `units_excluded_reason` field alongside the count. No number
+changed; the accuracy, scored population and matrix are byte-identical to the run
+before it.
+
+---
+
 ## On the independence of the answer key
 
 Finding 4 records that the fault→state mapping was committed before `decide.py` existed.
