@@ -8,8 +8,8 @@ from afc.config import (
     CONTRACTED_MDR_BPS,
     GST_ON_FEE_BPS,
     SEED_DEV,
-    SEED_HELDOUT_SEALED,
-    SEED_HELDOUT_USED,
+    SEED_SEALED_EVAL,
+    SEED_SEALED_EVAL_RESERVE,
     TOLERANCE_PAISE,
 )
 from afc.core.calendar import is_overdue, is_working_day
@@ -20,7 +20,7 @@ from afc.generate.generator import T_PLUS, generate
 from afc.money import net_per_payment_paise
 
 DEV = generate(SEED_DEV)
-HELD = generate(SEED_HELDOUT_USED)
+SEALED = generate(SEED_SEALED_EVAL)
 DEV_ONLY_CLASSES = {"+".join(sorted(p)) for p in DEV_ONLY_PAIRS}
 
 
@@ -43,16 +43,16 @@ def test_generation_is_reproducible_for_a_fixed_seed():
     assert a.truth == b.truth
 
 
-def test_dev_and_held_out_differ_by_seed_alone():
+def test_dev_and_sealed_eval_differ_by_seed_alone():
     # Same code path, so the class composition is identical; only amounts, refund
     # incidence and settlement dating vary. Recorded as a limitation, not a defect.
     assert Counter(t.fault_class for t in DEV.truth) == Counter(
-        t.fault_class for t in HELD.truth
+        t.fault_class for t in SEALED.truth
     )
-    assert [p.gross_paise for p in DEV.payments] != [p.gross_paise for p in HELD.payments]
+    assert [p.gross_paise for p in DEV.payments] != [p.gross_paise for p in SEALED.payments]
 
 
-@pytest.mark.parametrize("seed", [SEED_DEV, SEED_HELDOUT_USED, *SEED_HELDOUT_SEALED])
+@pytest.mark.parametrize("seed", [SEED_DEV, SEED_SEALED_EVAL, *SEED_SEALED_EVAL_RESERVE])
 def test_every_seed_produces_a_complete_dataset(seed):
     ds = generate(seed)
     assert len(ds.payments) == plan.TARGET_ORDERS
@@ -185,19 +185,49 @@ def test_identifiers_are_unique():
     assert len(unit_ids) == len(set(unit_ids))
 
 
-def test_every_held_out_scored_class_clears_the_floor():
+def test_every_sealed_eval_scored_class_clears_the_floor():
     counts = Counter(
-        t.fault_class for t in HELD.truth if t.fault_class not in DEV_ONLY_CLASSES
+        t.fault_class for t in SEALED.truth if t.fault_class not in DEV_ONLY_CLASSES
     )
-    short = {k: v for k, v in counts.items() if k != "clean" and v < plan.MIN_HELD_OUT_UNITS}
-    assert not short, f"under the {plan.MIN_HELD_OUT_UNITS} unit floor: {short}"
+    short = {k: v for k, v in counts.items() if k != "clean" and v < plan.MIN_SEALED_EVAL_UNITS}
+    assert not short, f"under the {plan.MIN_SEALED_EVAL_UNITS} unit floor: {short}"
 
 
 def test_same_axis_pairs_are_generated_in_both_splits_for_scoring_time_exclusion():
     # The owner required identical generation AND that these pairs be kept for study,
     # which is only consistent if the exclusion happens at scoring time.
     dev_c = Counter(t.fault_class for t in DEV.truth)
-    held_c = Counter(t.fault_class for t in HELD.truth)
+    sealed_c = Counter(t.fault_class for t in SEALED.truth)
     assert DEV_ONLY_CLASSES
     for name in DEV_ONLY_CLASSES:
-        assert dev_c[name] > 0 and held_c[name] == dev_c[name]
+        assert dev_c[name] > 0 and sealed_c[name] == dev_c[name]
+
+
+# ----------------------------------------------------------------- distribution shift
+def test_dev_and_sealed_eval_both_use_the_default_mix():
+    # Parameterising the mix must not reintroduce a structural switch between the two
+    # splits the headline number depends on.
+    import inspect
+
+    assert inspect.signature(generate).parameters["targets"].default is plan.DEFAULT
+
+
+def test_the_shifted_mix_moves_the_state_distribution_materially():
+    shifted = generate(2027, plan.SHIFTED)
+    base = Counter(
+        t.true_state for t in SEALED.truth if t.fault_class not in DEV_ONLY_CLASSES
+    )
+    sh = Counter(
+        t.true_state for t in shifted.truth if t.fault_class not in DEV_ONLY_CLASSES
+    )
+    bn, sn = sum(base.values()), sum(sh.values())
+    moved = max(abs(sh.get(s, 0) / sn - base.get(s, 0) / bn) for s in base)
+    assert moved > 0.10, f"largest per-state shift only {moved:.1%}; not a material shift"
+
+
+def test_the_shifted_split_is_the_same_code_path_with_the_same_fault_classes():
+    shifted = generate(2027, plan.SHIFTED)
+    assert set(Counter(t.fault_class for t in shifted.truth)) == set(
+        Counter(t.fault_class for t in SEALED.truth)
+    )
+    assert len(shifted.payments) == plan.TARGET_ORDERS

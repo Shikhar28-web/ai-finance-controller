@@ -1,6 +1,6 @@
 """Synthetic dataset generator. SPEC 4, SPEC 10 step 1.
 
-A pure function of its seed. Dev and held-out are the SAME code path with different
+A pure function of its seed. Dev and sealed_eval are the SAME code path with different
 seeds -- no structural switch exists, because any structural difference between the
 two would invalidate the measurement. The dev-only compound pairs are generated in
 both splits and excluded at scoring time, never at generation time.
@@ -68,18 +68,13 @@ def _amount(rng: random.Random) -> int:
     raise AssertionError("unreachable")
 
 
-def _settlement_blueprints() -> list[tuple[frozenset[str], dict[str, int]]]:
+def _settlement_blueprints(t: plan.Targets) -> list[tuple[frozenset[str], dict[str, int]]]:
     """(settlement-level faults, {ledger fault or '': payment count}) for each group.
 
     Declared explicitly rather than derived, so the census can be checked against the
     plan line by line.
     """
-    s, lg, c, d = (
-        plan.SETTLEMENT_FAULT_TARGETS,
-        plan.LEDGER_FAULT_TARGETS,
-        plan.COMPOUND_TARGETS,
-        plan.DEV_ONLY_COMPOUND_TARGETS,
-    )
+    s, lg, c, d = t.settlement, t.ledger, t.compound, t.dev_only
     return [
         (frozenset(), {
             "": -1,  # clean settlements absorb the remainder; filled in below
@@ -144,16 +139,16 @@ def _true_state(faults: tuple[str, ...], settlement_faults: frozenset[str]) -> s
     for key in (pair, tuple(reversed(pair))):
         if key in COMPOUND_PAIRS:
             return COMPOUND_PAIRS[key].true_state
-    return "DEV_ONLY"  # same-axis pair: excluded from held-out scoring
+    return "DEV_ONLY"  # same-axis pair: excluded from sealed_eval scoring
 
 
-def generate(seed: int) -> Dataset:
+def generate(seed: int, targets: plan.Targets = plan.DEFAULT) -> Dataset:
     rng = random.Random(seed)
     holidays = holiday_set(plan.WINDOW_START.year, plan.WINDOW_END.year)
     days = _working_days(plan.WINDOW_START, plan.WINDOW_END, holidays)
     lag_days, normal_days = days[-LAG_SETTLEMENT_DAYS:], days[:-LAG_SETTLEMENT_DAYS]
 
-    blueprints = _settlement_blueprints()
+    blueprints = _settlement_blueprints(targets)
     declared = sum(n for _, mix in blueprints for k, n in mix.items() if n > 0)
     clean_count = plan.TARGET_ORDERS - declared
     if clean_count < 0:
@@ -263,7 +258,7 @@ def generate(seed: int) -> Dataset:
                 n_bank += 1
 
     # Orphan bank credits: no settlement, no payment, their own recon units.
-    for i in range(plan.ORPHAN_BANK_CREDIT_UNITS):
+    for i in range(targets.orphans):
         bid = f"bank_{seed}_orph_{i:03d}"
         day = normal_days[rng.randrange(len(normal_days))]
         ds.bank_rows.append(

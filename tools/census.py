@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fault census: what the generator actually produced, before splits are wired.
 
-Reports per-class unit counts for dev and held-out separately, flags any held-out
+Reports per-class unit counts for dev and sealed_eval separately, flags any sealed_eval
 class below the floor, and shows the true-state distribution both over the whole
 population and over fault-carrying records only -- a headline accuracy dominated by
 clean records is measuring the easy case.
@@ -17,10 +17,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from afc.config import SEED_DEV, SEED_HELDOUT_SEALED, SEED_HELDOUT_USED, STATES  # noqa: E402
+from afc.config import SEED_DEV, SEED_SEALED_EVAL, SEED_SEALED_EVAL_RESERVE, STATES  # noqa: E402
 from afc.core.faults import DEV_ONLY_PAIRS  # noqa: E402
+from afc.generate import plan  # noqa: E402
 from afc.generate.generator import generate  # noqa: E402
-from afc.generate.plan import MIN_HELD_OUT_UNITS  # noqa: E402
+from afc.generate.plan import MIN_SEALED_EVAL_UNITS  # noqa: E402
 
 DEV_ONLY_CLASSES = {"+".join(sorted(p)) for p in DEV_ONLY_PAIRS}
 
@@ -31,14 +32,14 @@ def classes(truth) -> Counter:
 
 def main() -> int:
     dev = generate(SEED_DEV)
-    held = generate(SEED_HELDOUT_USED)
+    sealed = generate(SEED_SEALED_EVAL)
 
-    dev_c, held_c = classes(dev.truth), classes(held.truth)
+    dev_c, held_c = classes(dev.truth), classes(sealed.truth)
     all_classes = sorted(set(dev_c) | set(held_c))
 
     print("=" * 74)
-    print(f"FAULT CENSUS   dev seed {SEED_DEV}   held-out seed {SEED_HELDOUT_USED}   "
-          f"sealed {SEED_HELDOUT_SEALED}")
+    print(f"FAULT CENSUS   dev seed {SEED_DEV}   sealed_eval seed {SEED_SEALED_EVAL}   "
+          f"sealed {SEED_SEALED_EVAL_RESERVE}")
     print("=" * 74)
     print(f"{'fault class':52}{'dev':>6}{'held':>6}  flag")
     short = []
@@ -49,8 +50,8 @@ def main() -> int:
             flag = "dev-only"
         elif name == "clean":
             flag = ""
-        elif h < MIN_HELD_OUT_UNITS:
-            flag = f"UNDER {MIN_HELD_OUT_UNITS}"
+        elif h < MIN_SEALED_EVAL_UNITS:
+            flag = f"UNDER {MIN_SEALED_EVAL_UNITS}"
             short.append((name, h))
         else:
             flag = ""
@@ -60,9 +61,9 @@ def main() -> int:
     print(f"{'TOTAL units':52}{sum(dev_c.values()):>6}{sum(held_c.values()):>6}")
     scored = sum(v for k, v in held_c.items() if k not in DEV_ONLY_CLASSES)
     excl = sum(v for k, v in held_c.items() if k in DEV_ONLY_CLASSES)
-    print(f"{'held-out scored / excluded (same-axis pairs)':52}{scored:>6}{excl:>6}")
+    print(f"{'sealed_eval scored / excluded (same-axis pairs)':52}{scored:>6}{excl:>6}")
 
-    for label, ds in (("DEV", dev), ("HELD-OUT", held)):
+    for label, ds in (("DEV", dev), ("SEALED_EVAL", sealed)):
         truth = [t for t in ds.truth if t.fault_class not in DEV_ONLY_CLASSES]
         states = Counter(t.true_state for t in truth)
         faulty = Counter(t.true_state for t in truth if t.fault_class != "clean")
@@ -74,20 +75,44 @@ def main() -> int:
             print(f"  {st:16}{a:>7}{a/n:>8.1%}   {b:>11}{(b/nf if nf else 0):>8.1%}")
         print(f"  {'TOTAL':16}{n:>7}{1:>8.0%}   {nf:>11}{1:>8.0%}")
 
+    # Secondary, non-gating: a deliberately different fault mix on a burned reserve
+    # seed. Thin classes are expected here; this is a robustness signal, not a
+    # headline number, and it does not gate the build.
+    shifted = generate(SEED_SEALED_EVAL_RESERVE[0], plan.SHIFTED)
+    sh_c = classes(shifted.truth)
+    sh_states = Counter(
+        t.true_state for t in shifted.truth if t.fault_class not in DEV_ONLY_CLASSES
+    )
+    sh_n = sum(sh_states.values())
+    thin = sorted(
+        (k, v) for k, v in sh_c.items()
+        if k not in DEV_ONLY_CLASSES and k != "clean" and v < MIN_SEALED_EVAL_UNITS
+    )
+    print(f"\nDISTRIBUTION SHIFT (secondary; seed {SEED_SEALED_EVAL_RESERVE[0]}, burned)")
+    print(f"  {'state':16}{'shifted':>9}{'share':>8}{'  vs sealed_eval':>18}")
+    for st in STATES:
+        a = sh_states.get(st, 0)
+        base = Counter(
+            t.true_state for t in sealed.truth if t.fault_class not in DEV_ONLY_CLASSES
+        )
+        b = base.get(st, 0) / sum(base.values())
+        print(f"  {st:16}{a:>9}{a/sh_n:>8.1%}{(a/sh_n - b):>+17.1%}")
+    print(f"  thin classes (expected, not gating): {len(thin)}")
+
     print("\n" + "=" * 74)
     same_path = "generate(seed) is the only entry point; no structural switch exists"
     print(f"same code path, seeds differ only: {same_path}")
     identical = (
-        len(dev.payments) == len(held.payments)
-        and len(dev.settlements) == len(held.settlements)
+        len(dev.payments) == len(sealed.payments)
+        and len(dev.settlements) == len(sealed.settlements)
         and sorted(dev_c) == sorted(held_c)
     )
-    print(f"structural identity dev vs held-out: "
+    print(f"structural identity dev vs sealed_eval: "
           f"{'CONFIRMED' if identical else 'DIFFERS -- INVALID'}")
     if short:
-        print(f"\nUNDER-FLOOR CLASSES ({MIN_HELD_OUT_UNITS} unit floor): {short}")
+        print(f"\nUNDER-FLOOR CLASSES ({MIN_SEALED_EVAL_UNITS} unit floor): {short}")
         return 1
-    print(f"\nall scored held-out classes >= {MIN_HELD_OUT_UNITS} units")
+    print(f"\nall scored sealed_eval classes >= {MIN_SEALED_EVAL_UNITS} units")
     return 0
 
 

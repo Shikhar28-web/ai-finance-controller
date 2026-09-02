@@ -8,7 +8,7 @@ either direction moves the AWAITING_BANK / UNRESOLVED boundary.
 Everything here is a pure function of its arguments. `as_of` is passed in, never
 read from the clock: AWAITING_BANK vs UNRESOLVED turns on this window, so a
 wall-clock read would silently reclassify a frozen dataset overnight and make the
-held-out confusion matrix unreproducible. tools/check_imports.py enforces that.
+sealed_eval confusion matrix unreproducible. tools/check_imports.py enforces that.
 """
 
 from __future__ import annotations

@@ -16,6 +16,6 @@ jobs:
       - run: ruff check afc tools tests
       - run: python tools/check_imports.py
       - run: python tools/render_constants.py --check
-      # Fails if any held-out fault class falls under the 15-unit floor.
+      # Fails if any sealed_eval fault class falls under the 15-unit floor.
       - run: python tools/census.py
       - run: python -m pytest

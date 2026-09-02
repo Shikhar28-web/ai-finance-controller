@@ -80,7 +80,7 @@ def test_llm_client_is_the_one_place_the_sdk_may_be_imported():
 )
 def test_wall_clock_is_banned_in_core(source: str):
     # AWAITING_BANK vs UNRESOLVED turns on T+2; a clock read would reclassify a
-    # frozen dataset overnight and make the held-out matrix unreproducible.
+    # frozen dataset overnight and make the sealed_eval matrix unreproducible.
     assert "clock-ban" in rules_for("afc.core", source)
 
 

@@ -48,7 +48,7 @@ def test_all_five_states_are_reachable_from_the_mapping():
 
 # ---------------------------------------------------------------- composition rule
 @pytest.mark.parametrize("pair", sorted(COMPOUND_PAIRS))
-def test_held_out_compound_pairs_are_cross_axis(pair):
+def test_sealed_eval_compound_pairs_are_cross_axis(pair):
     # Same-axis pairs interact through attribution, so their true state would depend
     # on decomposer behaviour -- which an answer key may not do.
     assert is_cross_axis(pair), f"{pair} share axis {axis_of(pair[0])}"
@@ -60,7 +60,7 @@ def test_dev_only_pairs_are_same_axis_and_carry_a_reason(pair):
     assert len(DEV_ONLY_PAIRS[pair]) > 60
 
 
-def test_the_owners_predicted_pair_is_excluded_from_held_out():
+def test_the_owners_predicted_pair_is_excluded_from_sealed_eval():
     pair = ("fee_rate_drift", "duplicate_bank_credit")
     assert pair in DEV_ONLY_PAIRS
     assert pair not in COMPOUND_PAIRS
@@ -73,7 +73,7 @@ def test_compound_pairs_only_reference_known_compoundable_faults(pair):
         assert SINGLE_FAULTS[name].compoundable, f"{name} has no counterpart to compound onto"
 
 
-def test_no_pair_is_listed_as_both_held_out_and_dev_only():
+def test_no_pair_is_listed_as_both_sealed_eval_and_dev_only():
     assert not set(COMPOUND_PAIRS) & set(DEV_ONLY_PAIRS)
 
 

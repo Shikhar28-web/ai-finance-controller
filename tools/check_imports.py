@@ -17,7 +17,7 @@ Two mechanisms live here:
   2. CLOCK & ENTROPY BAN -- the same packages may not call datetime.now(),
      date.today(), time.time(), uuid4(), os.urandom(), or module-level random.*.
      AWAITING_BANK vs UNRESOLVED turns on a T+2 window, so a wall-clock read would
-     silently reclassify a frozen dataset overnight and make the held-out confusion
+     silently reclassify a frozen dataset overnight and make the sealed_eval confusion
      matrix unreproducible. Randomness must come from an injected random.Random(seed).
 
 Run: python tools/check_imports.py     (wired into `make check` and CI)

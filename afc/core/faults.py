@@ -34,7 +34,7 @@ admitted it.
 
 So admissibility is decided by AXIS, not by severity:
 
-    a compound pair is admissible in the held-out set if and only if
+    a compound pair is admissible in the sealed_eval set if and only if
     its two faults perturb DIFFERENT axes.
 
 Axes are the independent ways a record can go wrong:
@@ -45,7 +45,7 @@ Axes are the independent ways a record can go wrong:
     keying    whether the match is keyed or inferred
 
 Same-axis pairs stay in the dev set, where they can be studied, and are excluded from
-held-out with the reason recorded below.
+sealed_eval with the reason recorded below.
 """
 
 from __future__ import annotations
@@ -214,7 +214,7 @@ COMPOUND_PAIRS: dict[tuple[str, str], CompoundSpec] = {
     ),
 }
 
-# Same-axis pairs. Excluded from held-out because their true state would depend on
+# Same-axis pairs. Excluded from sealed_eval because their true state would depend on
 # decomposer behaviour rather than on what was injected. Kept in dev to study.
 DEV_ONLY_PAIRS: dict[tuple[str, str], str] = {
     ("fee_rate_drift", "duplicate_bank_credit"):

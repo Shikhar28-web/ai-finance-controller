@@ -64,12 +64,17 @@ REVIEW_THRESHOLD: Final = 0.60
 # ---------------------------------------------------------------- reproducibility
 SEED_DEV: Final = 42
 
-# Three held-out seeds generated; one used, two sealed. If a genuine bug forces a
-# second held-out run, a sealed seed is burned rather than re-running the one already
-# seen -- and the burn is logged in the README so the reader knows how many looks the
+# SEALED_EVAL is the split the headline number is measured on. It is not a held-out set
+# in the usual sense: it tests generalisation to unseen amounts, dates and refund
+# incidence under an IDENTICAL fault distribution, not to an unseen fault mix. The name
+# says exactly that much and no more.
+#
+# Three seeds generated, one measured, two kept in reserve. If a genuine bug forces a
+# second evaluation run, a reserve seed is opened rather than re-reading the one already
+# seen -- and the burn is logged in the README so a reader knows how many looks the
 # number has had.
-SEED_HELDOUT_USED: Final = 1_337
-SEED_HELDOUT_SEALED: Final = (2_027, 3_119)
+SEED_SEALED_EVAL: Final = 1_337
+SEED_SEALED_EVAL_RESERVE: Final = (2_027, 3_119)
 
 # ---------------------------------------------------------------- honesty (SPEC 9)
 # SPEC9_SENTENCES is verbatim from SPEC 9 and must never be edited.
@@ -147,21 +152,23 @@ JUSTIFICATIONS: Final = {
     ),
     "AUTO_THRESHOLD": (
         "0.90. Gates the auto-reconcile action, never the state label. Tuned on the "
-        "dev set only; the held-out cost of this choice is reported, not hidden."
+        "dev set only; what it costs on sealed_eval data is reported, not hidden."
     ),
     "REVIEW_THRESHOLD": (
         "0.60. Gates 'AI suggestion, human confirms'. Below it, straight to the "
         "human queue. Tuned on the dev set only."
     ),
     "SEED_DEV": "42. Fixed seed for the dev split, which we tune against freely.",
-    "SEED_HELDOUT_USED": (
-        "1337. The held-out seed actually measured. Never inspected, never tuned "
-        "against, run once at the end."
+    "SEED_SEALED_EVAL": (
+        "1337. The seed the headline number is measured on. Never inspected, never "
+        "tuned against, run once at the end. Tests generalisation to unseen amounts, "
+        "dates and refund incidence under an identical fault distribution -- not to "
+        "an unseen fault mix, which is why it is not called held-out."
     ),
-    "SEED_HELDOUT_SEALED": (
-        "(2027, 3119). Two unopened held-out seeds. Re-running the seed we have "
-        "already seen after a bug fix would be tuning against held-out data; burning "
-        "a sealed seed instead keeps the measurement clean, and the README logs every "
-        "burn so the reader can count how many looks the number has had."
+    "SEED_SEALED_EVAL_RESERVE": (
+        "(2027, 3119). Two unopened reserve seeds. Re-running the seed already seen "
+        "after a bug fix would be tuning against evaluation data; opening a reserve "
+        "seed instead keeps the measurement clean, and the README logs every burn so "
+        "a reader can count how many looks the number has had."
     ),
 }
