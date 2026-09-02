@@ -15,4 +15,5 @@ jobs:
       # build even if every test happens to pass. SPEC 3.
       - run: ruff check afc tools tests
       - run: python tools/check_imports.py
+      - run: python tools/render_constants.py --check
       - run: python -m pytest
