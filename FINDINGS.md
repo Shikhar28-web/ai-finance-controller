@@ -324,6 +324,90 @@ including `.first()` dedup violations, which have nothing to do with the LLM fir
 
 ---
 
+### 20. The fault-only matrix paired true states with the wrong fault classes — **[mine]**
+
+**What was wrong.** The fault-carrying-only confusion matrix was built by zipping
+`scored_pairs` (built in dictionary insertion order) against a separately `sorted()`
+list of ground-truth entries. The two orderings do not correspond, so each true/predicted
+pair was filtered using some *other* record's fault class.
+
+**How it was found.** Reading the harness back before reporting its output, and asking
+what guaranteed the two sequences aligned. Nothing did.
+
+**What it would have done.** The fault-only breakdown — the number that exists precisely
+because a headline dominated by clean records measures the easy case — would have been
+computed over an arbitrary subset. With a perfect diagonal it would still have read
+100%, so nothing would have looked wrong.
+
+**Fixed in.** `HEAD` — the fault class is carried alongside each pair rather than
+re-derived, and a test asserts `VERIFIED` support is 0 in the fault-only matrix, which
+is false under the bug.
+
+---
+
+### 21. The mandated firewall test would have passed vacuously — **[impl]**
+
+**What was wrong.** §3 requires a test that stubs the LLM with garbage and asserts the
+metrics are unchanged. With no LLM call anywhere in the pipeline, that test passes
+trivially and demonstrates nothing.
+
+**How it was found.** Asking what would have to break for the test to fail.
+
+**What it would have done.** The strongest architectural claim in the project — no
+metric depends on LLM output — would have rested on a test that could not fail.
+
+**Fixed in.** `HEAD` — a narrator now runs over the finished metrics and writes an
+`AiNote` into the summary. Two differently-seeded garbage narrators must leave the
+`metrics` block byte-identical *and* produce different notes; the second assertion is
+what makes the first mean something.
+
+---
+
+## On the independence of the answer key
+
+Finding 4 records that the fault→state mapping was committed before `decide.py` existed.
+That ordering is real and it is in the git history, but it proves less than it appears
+to, and the gap is worth stating in full rather than leaving as a caveat.
+
+**The git-ordering argument proves the mapping predates the *implementation*, not the
+*design*.** The R1–R10 cascade was authored into the README **before** `faults.py` was
+written. So the cascade was in context throughout the writing of the mapping, and the
+claim that the mapping was authored "from the SPEC 4 fault definitions and the SPEC 7
+table alone" is **unverifiable by construction** — it could not have been unseen.
+
+Three specific contamination traces are visible in the mapping file itself:
+
+1. **`bank_amount_mismatch` → `BY_MAGNITUDE`, keyed to `MATERIALITY_PAISE`.** §7's plain
+   text says "material" and "bounded" with no numbers attached. The mapping adopting the
+   *exact constant* the cascade uses at R5/R6 is not derivable from §7. It was read off
+   the cascade.
+2. **`bank_credit_missing`'s stated reason** — "generated past the T+2 window so it is
+   not a timing case" — is operational reasoning from the cascade's R2/R3 split. §4's
+   one-line fault description contains nothing about window position.
+3. **The axis taxonomy maps almost one-to-one onto cascade rows**: gap→R5/R6,
+   ledger→R7, presence→R2/R3, keying→R4. That correspondence is unlikely to be
+   independent invention.
+
+**What survives as genuine independence is thin.** The axis rule excluded
+`fee_rate_drift + duplicate_bank_credit` before the decomposer existed, and one compound
+disagreement stands on the record (`timing_lag + duplicate_ledger_entry`, where severity
+ordering and the axis reading differ). But note *where* that independence sits: in
+**compound precedence**, not in the single-fault mappings. **The single-fault mappings
+are exactly what produce the diagonal cells of the confusion matrix, and they show no
+independent signal at all.**
+
+**Therefore a zero-diff between mapping and cascade is not validation.** It is the
+expected outcome of one author designing the cascade and then writing an answer key with
+that cascade in mind, and it should be read as consistent with the shared-author limit
+rather than as evidence the classifier is correct. A small non-zero diff would carry more
+information than a zero one, because it would demonstrate that at least some of the key
+was derived from the spec rather than from the implementation.
+
+The honest remedy is not available inside this project: it requires a second author, or
+a real settlement file whose faults neither list anticipated.
+
+---
+
 ## What is still open
 
 Not defects, but limits that no amount of further work on this dataset can remove.

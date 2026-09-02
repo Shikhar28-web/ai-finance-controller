@@ -340,7 +340,7 @@ number is qualified* — same disclosure, and nothing is behind that click which
 not also in two plaintext files. Rendered from `afc/config.py`; the split is
 asserted to reconstitute the full text exactly.
 
-**[FINDINGS.md](FINDINGS.md) — 19 real defects this process caught, in the order
+**[FINDINGS.md](FINDINGS.md) — 21 real defects this process caught, in the order
 caught.** Read it before the scores. Every metric here will read as perfect for the
 construction reasons below, and a page of 100% figures is what you would expect from a
 system that works *and* from one that is merely self-consistent; the scores cannot tell
@@ -376,11 +376,18 @@ reported with them.
   on today's code. It is kept as a guard against future edits — and against a
   refactor that starts attributing against the running residual rather than the
   contracted baseline — not as a live check that is passing.
-- **The answer key and the classifier share an author.** The fault-to-state ground
-  truth was written from the SPEC 4 fault definitions and the SPEC 7 table alone and
-  committed to git before the classifier existed — the history, not an assertion, is
-  the evidence. But one author wrote both, so the agreement diff catches genuine
-  slips, not shared blind spots.
+- **The answer key's independence from the classifier is unverifiable by
+  construction.** The fault-to-state ground truth was committed to git before
+  `decide.py` existed, and that ordering is real — but it proves the mapping predates
+  the *implementation*, not the *design*. The R1–R10 cascade was authored **before** the
+  mapping and was in context throughout writing it, so "authored from §4 and §7 alone"
+  cannot be verified and is not claimed. Three specific contamination traces are
+  identified in [FINDINGS.md](FINDINGS.md#on-the-independence-of-the-answer-key),
+  including the mapping adopting the cascade's exact `MATERIALITY_PAISE` constant where
+  §7 gives only the word "material". What independence survives sits in *compound
+  precedence*, not in the single-fault mappings that produce the diagonal cells.
+  **A zero-diff between mapping and cascade is therefore not validation** — it is the
+  expected outcome, and a small non-zero diff would carry more information.
 
 No target metric is hardcoded anywhere. The engine reports what it actually
 produces, including failures.

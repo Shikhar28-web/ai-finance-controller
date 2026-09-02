@@ -1,7 +1,7 @@
 PY := ./.venv/bin/python
 RUFF := ./.venv/bin/ruff
 
-.PHONY: check lint firewall readme readme-write census test
+.PHONY: check lint firewall readme readme-write census metrics test
 
 check: lint firewall readme census test
 
@@ -19,6 +19,9 @@ readme-write:
 
 census:
 	$(PY) tools/census.py
+
+metrics:
+	$(PY) tools/run_metrics.py dev --json metrics_summary.json
 
 test:
 	$(PY) -m pytest
