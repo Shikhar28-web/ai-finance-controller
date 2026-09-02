@@ -5,10 +5,14 @@
 PY := $(shell [ -x ./.venv/bin/python ] && echo ./.venv/bin/python || command -v python3)
 RUFF := ./.venv/bin/ruff
 
-.PHONY: metrics setup check lint firewall readme readme-write census test
+.PHONY: metrics viewer setup check lint firewall readme readme-write census test
 
 metrics:
 	$(PY) tools/run_metrics.py dev --json metrics_summary.json
+
+viewer: metrics
+	$(PY) tools/make_viewer_data.py
+	@echo "open docs/index.html"
 
 setup:
 	python3 -m venv .venv

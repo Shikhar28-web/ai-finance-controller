@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Finance Controller — results</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="metrics_data.js" onerror="window.__afcNoBundle=true"></script>
+<style>
+  body { font-feature-settings: "tnum" 1; }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="bg-stone-50 text-stone-900 antialiased">
+<div class="mx-auto max-w-5xl px-6 py-10">
+
+  <header class="mb-8">
+    <h1 class="text-2xl font-semibold tracking-tight">AI Finance Controller</h1>
+    <p class="mt-1 text-stone-600">Every rupee gets a verified trail.</p>
+    <p id="prov" class="mt-2 text-xs text-stone-500 num"></p>
+  </header>
+
+  <!-- shown only when no data could be loaded -->
+  <div id="nodata" class="hidden rounded-lg border border-amber-300 bg-amber-50 p-5">
+    <h2 class="font-semibold text-amber-900">No metrics loaded</h2>
+    <p class="mt-2 text-sm text-amber-900">
+      This page displays <code class="font-mono">metrics_summary.json</code> and computes
+      nothing itself. Nothing is shown because no metrics file was found — these are not
+      placeholder numbers, there are simply no numbers.
+    </p>
+    <p class="mt-3 text-sm text-amber-900">Generate it with:</p>
+    <pre class="mt-1 rounded bg-amber-100 px-3 py-2 font-mono text-xs">make viewer</pre>
+    <p class="mt-3 text-sm text-amber-900">Or load an existing file:
+      <input id="picker" type="file" accept="application/json"
+             class="mt-2 block text-sm"></p>
+  </div>
+
+  <main id="data" class="hidden space-y-8">
+
+    <!-- 1. coverage -->
+    <section class="rounded-lg border border-stone-200 bg-white p-6">
+      <div class="flex flex-wrap items-baseline gap-x-4">
+        <span id="coverage" class="num text-6xl font-semibold tracking-tight">—</span>
+        <span class="text-lg text-stone-600">coverage</span>
+      </div>
+      <p class="mt-3 max-w-3xl text-stone-700">
+        Share of records reaching a terminal state without a human.
+        <strong>It is this low by design</strong>: only <code class="font-mono text-sm">VERIFIED</code>
+        and <code class="font-mono text-sm">EXPLAINED</code> auto-reconcile, and a duplicated bank
+        credit is fully attributable yet still routed to a person — attributing a gap is
+        not the same as the gap being benign.
+      </p>
+      <dl id="rupees" class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4"></dl>
+    </section>
+
+    <!-- 2. accuracy + the four limits, adjacent -->
+    <section class="rounded-lg border border-stone-200 bg-white p-6">
+      <div class="flex flex-wrap items-baseline gap-x-4">
+        <span id="accuracy" class="num text-5xl font-semibold tracking-tight">—</span>
+        <span id="accfrac" class="num text-lg text-stone-600"></span>
+      </div>
+      <p class="mt-1 text-stone-600">Classification accuracy across all five states.</p>
+
+      <div class="mt-5 rounded-md border-l-4 border-stone-900 bg-stone-50 p-4">
+        <p class="font-semibold">This is the expected result here, not a good one.</p>
+        <ol class="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-stone-700">
+          <li><strong>Generator and classifier share the same fee arithmetic</strong> —
+            single-cause faults are correct by construction.</li>
+          <li><strong>The decomposer's cause list is the same closed set as the
+            generator's fault list</strong> — there is no cause it can fail to recognise.</li>
+          <li><strong>~64% of scored units carry a fault</strong>, against roughly 5% in a
+            real merchant file — not comparable to production accuracy.</li>
+          <li><strong>The answer key's independence is unverifiable</strong> — the decision
+            cascade was designed before the key was written.</li>
+        </ol>
+      </div>
+
+      <div class="mt-5 border-t border-stone-200 pt-4">
+        <p id="honest-head" class="text-sm italic text-stone-700"></p>
+        <button id="toggle" class="mt-2 text-sm font-medium text-stone-900 underline
+          underline-offset-2">Why this number is qualified →</button>
+        <p id="honest-rest" class="mt-2 hidden text-sm italic text-stone-600"></p>
+      </div>
+
+      <dl id="attribution" class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4"></dl>
+    </section>
+
+    <!-- 3. confusion matrix -->
+    <section class="rounded-lg border border-stone-200 bg-white p-6">
+      <h2 class="text-lg font-semibold">Confusion matrix</h2>
+      <p class="mt-1 text-sm text-stone-600">
+        Rows are the recorded ground-truth state, columns the state assigned.
+        Denominator: <span id="denom" class="font-mono text-xs"></span>
+      </p>
+      <div class="mt-4 overflow-x-auto">
+        <table class="min-w-full text-sm"><thead id="mhead"></thead><tbody id="mbody"></tbody></table>
+      </div>
+      <p id="excluded" class="mt-4 max-w-3xl text-xs text-stone-600"></p>
+    </section>
+
+    <!-- 4. the two walkthrough records -->
+    <section>
+      <h2 class="text-lg font-semibold">Proving what it knows, then admitting what it doesn't</h2>
+      <p class="mt-1 text-sm text-stone-600">Two records from the dev run. The second one is the product.</p>
+      <div class="mt-4 grid gap-4 md:grid-cols-2">
+        <div class="rounded-lg border border-emerald-300 bg-emerald-50/50 p-5">
+          <div class="flex items-center gap-2">
+            <span class="rounded bg-emerald-700 px-2 py-0.5 text-xs font-semibold text-white">EXPLAINED</span>
+            <span class="font-mono text-xs text-stone-600">setl_42_0010 · rule R9</span>
+          </div>
+          <dl class="mt-3 space-y-1 font-mono text-xs num">
+            <div class="flex justify-between"><dt>expected (contracted)</dt><dd>Rs 24,666.32</dd></div>
+            <div class="flex justify-between"><dt>actual</dt><dd>Rs 24,602.44</dd></div>
+            <div class="flex justify-between font-semibold"><dt>gap</dt><dd>−Rs 63.88</dd></div>
+          </dl>
+          <div class="mt-3 rounded bg-white p-3 text-xs">
+            <div class="flex justify-between font-mono num">
+              <span>fee_rate_drift</span><span class="font-semibold">−Rs 63.88</span></div>
+            <p class="mt-1 text-stone-600">“MDR 2.10% applied vs contracted 1.90% across 11 payments”</p>
+          </div>
+          <p class="mt-3 text-xs text-stone-700">
+            <strong>unexplained Rs 0.00</strong> · confidence 0.889 (8 of 9 checks)</p>
+        </div>
+
+        <div class="rounded-lg border border-amber-300 bg-amber-50/50 p-5">
+          <div class="flex items-center gap-2">
+            <span class="rounded bg-amber-700 px-2 py-0.5 text-xs font-semibold text-white">HUMAN_REVIEW</span>
+            <span class="font-mono text-xs text-stone-600">setl_42_0006 · rule R6</span>
+          </div>
+          <dl class="mt-3 space-y-1 font-mono text-xs num">
+            <div class="flex justify-between"><dt>expected (contracted)</dt><dd>Rs 51,678.78</dd></div>
+            <div class="flex justify-between"><dt>actual</dt><dd>Rs 51,636.78</dd></div>
+            <div class="flex justify-between font-semibold"><dt>gap</dt><dd>−Rs 42.00</dd></div>
+          </dl>
+          <div class="mt-3 rounded bg-white p-3 text-xs">
+            <div class="font-mono text-stone-500">attributed causes: none</div>
+            <p class="mt-1 text-stone-600">Every named cause was checked. None accounts for Rs 42.00.</p>
+          </div>
+          <p class="mt-3 text-xs text-stone-700">
+            <strong>unexplained −Rs 42.00</strong> · confidence 0.778 (7 of 9 checks)<br>
+            <span class="text-stone-500">failed: amount_within_tol, gap_fully_attributed</span></p>
+          <p class="mt-2 text-xs font-medium text-amber-900">No cause is invented to close it.
+            Unknown is a first-class answer.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. findings -->
+    <a href="../FINDINGS.md" class="block rounded-lg border-2 border-stone-900 bg-stone-900 p-6
+       text-white transition hover:bg-stone-800">
+      <div class="text-xs uppercase tracking-widest text-stone-400">Read this before the scores</div>
+      <div class="mt-1 text-xl font-semibold">FINDINGS.md — 23 defects this process caught →</div>
+      <p class="mt-2 max-w-3xl text-sm text-stone-300">
+        The scores above cannot distinguish a system that works from one that is merely
+        self-consistent. The defects can. Each entry records what was wrong, how it was
+        found, what it would have done to the reported number, and the commit that fixed
+        it — including defects in the spec itself.
+      </p>
+    </a>
+
+    <footer class="pt-2 text-xs text-stone-500">
+      This page reads <code class="font-mono">metrics_summary.json</code> and computes
+      nothing. All financial arithmetic is deterministic and happens in
+      <code class="font-mono">afc/</code>, which cannot import any LLM code — enforced by
+      <code class="font-mono">tools/check_imports.py</code> in CI.
+      <span id="meta" class="num"></span>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const paise = (p) => (p < 0 ? "−" : "") + "Rs " +
+    Math.abs(p / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pct = (x) => (x * 100).toFixed(1) + "%";
+
+  function cell(label, value) {
+    return `<div><dt class="text-xs text-stone-500">${label}</dt>
+            <dd class="num mt-0.5 text-sm font-semibold">${value}</dd></div>`;
+  }
+
+  function render(summary) {
+    const m = summary.metrics, c = m.confusion;
+    $("prov").textContent =
+      `split ${m.split} · seed ${m.seed} · ${m.population_scored} of ${m.population_total} units scored`
+      + (summary.run_meta ? ` · ${summary.run_meta.git_sha}` : "");
+
+    $("coverage").textContent = pct(m.coverage_terminal_without_human);
+    $("rupees").innerHTML =
+      cell("auto-reconciled correctly", paise(m.rupees.auto_reconciled_correct)) +
+      cell("cost of false positives", paise(m.rupees.auto_reconciled_wrong_cost_of_false_positives)) +
+      cell("sent to human review", paise(m.rupees.sent_to_human_review)) +
+      cell("unresolved", paise(m.rupees.unresolved));
+
+    $("accuracy").textContent = c.accuracy.toFixed(4);
+    $("accfrac").textContent = `${c.correct} / ${c.scored} recon units`;
+    $("attribution").innerHTML =
+      cell("exact cause-set match", m.attribution.exact_cause_set_match_rate.toFixed(4)) +
+      cell("rupee attribution error", m.attribution.rupee_attribution_error_paise + " paise") +
+      cell("decomposition failures", m.decomposition_failures) +
+      cell("bank rows unkeyable", m.unkeyed_bank_rows);
+
+    const sentences = m.honesty_clause.split(/(?<=\.)\s+/);
+    $("honest-head").textContent = sentences[0];
+    $("honest-rest").textContent = sentences.slice(1).join(" ");
+    $("toggle").addEventListener("click", () => {
+      const r = $("honest-rest");
+      r.classList.toggle("hidden");
+      $("toggle").textContent = r.classList.contains("hidden")
+        ? "Why this number is qualified →" : "Hide ↑";
+    });
+
+    $("denom").textContent = m.denominator;
+    $("mhead").innerHTML = "<tr><th class='px-3 py-2 text-left font-medium text-stone-500'>true \\ predicted</th>" +
+      c.labels.map((l) => `<th class="px-3 py-2 text-right font-mono text-xs font-medium">${l}</th>`).join("") +
+      "<th class='px-3 py-2 text-right font-medium text-stone-500'>recall</th></tr>";
+    $("mbody").innerHTML = c.matrix_true_by_predicted.map((row, i) => {
+      const label = c.labels[i];
+      return `<tr class="border-t border-stone-100"><th class="px-3 py-2 text-left font-mono text-xs font-medium">${label}</th>` +
+        row.map((n, j) => `<td class="num px-3 py-2 text-right ${i === j
+          ? "bg-stone-900/5 font-semibold" : n ? "text-red-700 font-semibold" : "text-stone-300"}">${n}</td>`).join("") +
+        `<td class="num px-3 py-2 text-right text-stone-600">${c.per_state[label].recall.toFixed(4)}</td></tr>`;
+    }).join("");
+    $("excluded").textContent =
+      `${m.units_excluded_same_axis_compounds} units excluded from scoring. ${m.units_excluded_reason}`;
+
+    if (summary.run_meta) {
+      $("meta").textContent = ` Run: ${summary.run_meta.wall_clock_seconds}s, ` +
+        `${summary.run_meta.records_per_second} records/sec.`;
+    }
+    $("data").classList.remove("hidden");
+    $("nodata").classList.add("hidden");
+  }
+
+  function fail() {
+    $("nodata").classList.remove("hidden");
+    $("data").classList.add("hidden");
+  }
+
+  $("picker").addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { try { render(JSON.parse(r.result)); } catch (err) { fail(); } };
+    r.readAsText(f);
+  });
+
+  // 1. bundled copy (works when opened straight from disk)
+  if (window.AFC_METRICS) { render(window.AFC_METRICS); return; }
+  // 2. the real file, when the page is actually served
+  fetch("../metrics_summary.json")
+    .then((r) => (r.ok ? r.json() : Promise.reject()))
+    .then(render)
+    .catch(fail);
+})();
+</script>
+</body>
+</html>
