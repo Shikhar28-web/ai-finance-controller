@@ -363,6 +363,26 @@ what makes the first mean something.
 
 ---
 
+### 22. The demo path did not work on a fresh clone — **[impl]**
+
+**What was wrong.** The Makefile resolved `PY` to `./.venv/bin/python` unconditionally.
+That directory is gitignored, so `make metrics` on a clean checkout failed with
+`No such file or directory` before producing anything.
+
+**How it was found.** Cloning the repository into a temp directory and running the one
+command a judge would run, instead of assuming the command that works locally works
+anywhere.
+
+**What it would have done.** The single most important path in the submission — clone,
+one command, a number — would have failed at the first step, on a project whose runtime
+has no third-party dependencies at all and never needed the venv.
+
+**Fixed in.** `HEAD~1` — `PY` falls back to system `python3`; the venv is now only for
+`pytest` and `ruff` via `make setup`. Re-verified from a clean clone in a temp
+directory.
+
+---
+
 ## On the independence of the answer key
 
 Finding 4 records that the fault→state mapping was committed before `decide.py` existed.

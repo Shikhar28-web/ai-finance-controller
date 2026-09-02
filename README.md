@@ -56,7 +56,7 @@ Full five-sentence clause in [`metrics_summary.json`](metrics_summary.json) and 
 
 ---
 
-## → [FINDINGS.md](FINDINGS.md) — 21 defects this process caught, and why a perfect score is not evidence
+## → [FINDINGS.md](FINDINGS.md) — 22 defects this process caught, and why a perfect score is not evidence
 
 **This is the document worth reading.** The scores above cannot distinguish a system
 that works from one that is merely self-consistent. The defects can. Each entry has what
