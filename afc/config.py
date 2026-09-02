@@ -63,7 +63,13 @@ REVIEW_THRESHOLD: Final = 0.60
 
 # ---------------------------------------------------------------- reproducibility
 SEED_DEV: Final = 42
-SEED_HELDOUT: Final = 1_337
+
+# Three held-out seeds generated; one used, two sealed. If a genuine bug forces a
+# second held-out run, a sealed seed is burned rather than re-running the one already
+# seen -- and the burn is logged in the README so the reader knows how many looks the
+# number has had.
+SEED_HELDOUT_USED: Final = 1_337
+SEED_HELDOUT_SEALED: Final = (2_027, 3_119)
 
 # ---------------------------------------------------------------- honesty (SPEC 9)
 # SPEC9_SENTENCES is verbatim from SPEC 9 and must never be edited.
@@ -148,8 +154,14 @@ JUSTIFICATIONS: Final = {
         "human queue. Tuned on the dev set only."
     ),
     "SEED_DEV": "42. Fixed seed for the dev split, which we tune against freely.",
-    "SEED_HELDOUT": (
-        "1337. Fixed seed for the held-out split. Never inspected, never tuned "
+    "SEED_HELDOUT_USED": (
+        "1337. The held-out seed actually measured. Never inspected, never tuned "
         "against, run once at the end."
+    ),
+    "SEED_HELDOUT_SEALED": (
+        "(2027, 3119). Two unopened held-out seeds. Re-running the seed we have "
+        "already seen after a bug fix would be tuning against held-out data; burning "
+        "a sealed seed instead keeps the measurement clean, and the README logs every "
+        "burn so the reader can count how many looks the number has had."
     ),
 }

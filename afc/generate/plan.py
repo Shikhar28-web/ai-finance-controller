@@ -1,0 +1,92 @@
+"""The injection plan: how many recon units each fault class should produce.
+
+Declared as data so the census can check it and the owner can retune it without
+touching generator logic. Counts are UNIT counts (recon units), not settlement
+counts -- a settlement-level fault contributes one unit per payment it contains,
+so the generator sizes settlements to hit these targets.
+
+MIN_HELD_OUT_UNITS is the owner's floor: below it, per-state recall for anything
+the class feeds is noise, and rebalancing now beats caveating later.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+
+MIN_HELD_OUT_UNITS = 15
+
+TARGET_ORDERS = 500
+WINDOW_START = date(2026, 6, 1)
+WINDOW_END = date(2026, 7, 31)
+
+# Frozen evaluation date. Never a clock read: AWAITING_BANK vs UNRESOLVED turns on
+# it, so a wall-clock read would reclassify the dataset overnight. Set to the last
+# day of the window: with T+2, that leaves exactly the final three working days
+# (29, 30, 31 Jul) still inside their window, which is where timing_lag settlements
+# are placed. Every other settlement is dated early enough that its due date has
+# passed, so a clean record is VERIFIED rather than AWAITING_BANK.
+AS_OF = date(2026, 7, 31)
+
+# Settlement-level fault classes: injected per settlement, so every payment in that
+# settlement inherits the class unless it also carries a ledger fault.
+SETTLEMENT_FAULT_TARGETS: dict[str, int] = {
+    # fee_rate_drift is the sole source of EXPLAINED after the SPEC 7 change to
+    # duplicate_bank_credit, so it carries an entire diagonal cell alone and gets
+    # more units than the floor. Everything else sits just above MIN_HELD_OUT_UNITS,
+    # to leave as much of the 500 as possible for clean records.
+    "fee_rate_drift": 28,
+    "missing_utr": 16,
+    "bank_credit_missing": 16,
+    "bank_amount_mismatch_material": 16,
+    "bank_amount_mismatch_bounded": 16,
+    "duplicate_bank_credit": 16,
+    "timing_lag": 16,
+    "timing_overdue": 16,
+}
+
+# Payment-level ledger fault classes, injected inside otherwise-clean settlements.
+LEDGER_FAULT_TARGETS: dict[str, int] = {
+    "refund_not_in_ledger": 16,
+    "duplicate_ledger_entry": 16,
+}
+
+# Cross-axis compounds: a settlement-level fault plus a ledger fault on the same
+# payment. Held-out admissible (afc/core/faults.py COMPOUND_PAIRS).
+COMPOUND_TARGETS: dict[tuple[str, str], int] = {
+    ("fee_rate_drift", "duplicate_ledger_entry"): 15,
+    ("fee_rate_drift", "refund_not_in_ledger"): 15,
+    ("fee_rate_drift", "missing_utr"): 15,
+    ("missing_utr", "duplicate_ledger_entry"): 15,
+    ("duplicate_bank_credit", "duplicate_ledger_entry"): 15,
+    ("bank_amount_mismatch", "duplicate_ledger_entry"): 15,
+    ("timing_overdue", "duplicate_ledger_entry"): 15,
+    ("timing_lag", "duplicate_ledger_entry"): 15,
+}
+
+# Same-axis compounds. GENERATED IN BOTH SPLITS and excluded from held-out SCORING,
+# not from held-out generation. The owner required dev and held-out to differ by seed
+# alone -- a structural difference invalidates the measurement -- and also required
+# these pairs kept for study. Both hold only if generation is identical and the
+# exclusion happens at scoring time, with the excluded unit count reported.
+# See afc/core/faults.py DEV_ONLY_PAIRS.
+DEV_ONLY_COMPOUND_TARGETS: dict[tuple[str, str], int] = {
+    ("fee_rate_drift", "duplicate_bank_credit"): 12,
+    ("fee_rate_drift", "bank_amount_mismatch"): 12,
+    ("duplicate_bank_credit", "bank_amount_mismatch"): 12,
+}
+
+ORPHAN_BANK_CREDIT_UNITS = 18
+
+# Payment amount distribution, in paise. Weighted to small tickets, with a long tail,
+# so a settlement's gross is realistic and fee variance is well above tolerance.
+AMOUNT_BUCKETS: tuple[tuple[int, int, int], ...] = (
+    (10_000, 100_000, 45),      # Rs 100 - Rs 1,000     45% weight
+    (100_000, 500_000, 35),     # Rs 1,000 - Rs 5,000   35%
+    (500_000, 2_000_000, 17),   # Rs 5,000 - Rs 20,000  17%
+    (2_000_000, 8_000_000, 3),  # Rs 20,000 - Rs 80,000  3%
+)
+
+DRIFTED_MDR_BPS = 210          # the silent change; contract stays at 190
+REFUND_RATE_PER_MILLE = 60     # ~6% of payments carry a refund
+BOUNDED_MISMATCH_PAISE = 4_200      # under MATERIALITY_PAISE (10,000)
+MATERIAL_MISMATCH_PAISE = 137_500   # well over it

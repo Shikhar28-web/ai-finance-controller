@@ -90,11 +90,78 @@ fails if this table drifts out of sync.
 | `REVIEW_THRESHOLD` | `0.6` | 0.60. Gates 'AI suggestion, human confirms'. Below it, straight to the human queue. Tuned on the dev set only. |
 | `ROUNDING_CAP_CENTIPAISE_PER_PAYMENT` | `109` | 1.09 paise per payment, in centipaise to stay integer. The hard bound on accumulated rounding: 0.5 (fee) + 0.5 (GST) + 0.18*0.5 (GST on a rounded fee). Anything beyond the cap is unexplained, not rounding. |
 | `SEED_DEV` | `42` | 42. Fixed seed for the dev split, which we tune against freely. |
-| `SEED_HELDOUT` | `1337` | 1337. Fixed seed for the held-out split. Never inspected, never tuned against, run once at the end. |
+| `SEED_HELDOUT_SEALED` | `(2027, 3119)` | (2027, 3119). Two unopened held-out seeds. Re-running the seed we have already seen after a bug fix would be tuning against held-out data; burning a sealed seed instead keeps the measurement clean, and the README logs every burn so the reader can count how many looks the number has had. |
+| `SEED_HELDOUT_USED` | `1337` | 1337. The held-out seed actually measured. Never inspected, never tuned against, run once at the end. |
 | `SETTLEMENT_T_PLUS_WORKING_DAYS` | `2` | T+2, per SPEC 4. Working days exclude Sundays, the 2nd and 4th Saturday, and bank holidays. Drives the AWAITING_BANK / UNRESOLVED boundary. |
 | `TOLERANCE_PAISE` | `100` (Rs 1.00) | Rs 1.00. SPEC 7 suggests it. Absorbs accumulated paise rounding across a settlement without being large enough to hide a real fault. Note: this constant never binds on our synthetic data -- generator and classifier share arithmetic, so a clean settlement's gap is exactly 0 and every injected fault clears Rs 1 by more than an order of magnitude. It is exercised by unit-test fixtures and exists for real-file robustness. |
 
 <!-- END GENERATED CONSTANTS -->
+
+## The dataset
+
+500 orders over **1 Jun – 31 Jul 2026**, evaluated as of **31 Jul 2026** — a frozen
+date, never a clock read, chosen so the final three working days sit inside their
+T+2 window and host the `timing_lag` settlements.
+
+The working-day calendar is a **declared closed world**: working days are Sundays,
+2nd/4th Saturdays and an explicit fixed-date holiday list, and the dataset asserts
+nothing about real Indian bank closures in that period. The dates are coordinates,
+not history, so no settlement can land on a day the bank was "really" shut. Same
+move as the contracted MDR: a declared input, not a claim about the world.
+
+**Unit of classification: 518 recon units** — one per payment (500), one per orphan
+bank credit (18). SPEC 7 says every transaction lands in one state, but AWAITING_BANK
+is a property of a settlement and orphan-record a property of a bank row; the
+confusion matrix needs one declared denominator. 482 units are scored; 36 are
+excluded (below).
+
+Dev and held-out come from **`generate(seed)` and nothing else** — no structural
+switch exists. Seeds: dev `42`, held-out `1337`, sealed `2027` and `3119`. If a
+genuine bug forces a second held-out run, a sealed seed is burned rather than
+re-running one already seen, and the burn is logged here.
+
+**Held-out seeds burned so far: 0.**
+
+### Four things to read the numbers with
+
+1. **The dataset is deliberately fault-dense.** 35.7% of units are clean. A real
+   merchant's file is closer to 95% clean. Density is what makes every class
+   measurable at the 15-unit floor; it also means headline accuracy here is not
+   comparable to accuracy on a real file. Metrics are reported over all units *and*
+   over fault-carrying units only, because a headline dominated by clean records
+   measures the easy case.
+2. **Held-out varies amounts, dates and refund incidence — not fault composition.**
+   Because generation is one code path parameterised only by seed, both splits have
+   identical class counts. Held-out therefore tests generalisation to new amounts and
+   dates, not to a different mix of faults.
+3. **EXPLAINED rests on one fault class.** After the SPEC 7 change to
+   `duplicate_bank_credit`, `fee_rate_drift` is its only source: 28 units, 5.8% of the
+   population. That diagonal cell deserves more suspicion than the others.
+4. **HUMAN_REVIEW is 50% of fault-carrying units.** The SPEC 7 change plus the ledger
+   compounds concentrate half the fault population in one state, so its per-state
+   scores will look strong for structural reasons.
+
+### Census
+
+`make census` prints it and fails if any scored held-out class falls under 15 units.
+
+| | dev | held-out |
+|---|---|---|
+| recon units | 518 | 518 |
+| scored | 482 | 482 |
+| excluded (same-axis pairs) | 36 | 36 |
+| smallest scored fault class | 15 | 15 |
+| clean share of scored units | 35.7% | 35.7% |
+
+True-state distribution (scored units), identical across splits by construction:
+
+| State | units | share | fault-only | share |
+|---|---|---|---|---|
+| VERIFIED | 172 | 35.7% | 0 | 0.0% |
+| EXPLAINED | 28 | 5.8% | 28 | 9.0% |
+| AWAITING_BANK | 31 | 6.4% | 31 | 10.0% |
+| HUMAN_REVIEW | 155 | 32.2% | 155 | 50.0% |
+| UNRESOLVED | 96 | 19.9% | 96 | 31.0% |
 
 ## Deviations from SPEC.md
 
@@ -149,16 +216,33 @@ Each of these was raised with the owner and approved before any code was written
   | R4 | HUMAN_REVIEW | match was inferred rather than keyed |
   | R5 | UNRESOLVED | `abs(unexplained) >= MATERIALITY_PAISE` |
   | R6 | HUMAN_REVIEW | `0 < abs(unexplained) < MATERIALITY_PAISE` |
-  | R7 | HUMAN_REVIEW | `ledger_agrees` is false |
+  | R7 | HUMAN_REVIEW | `ledger_agrees` is false, **or Level 0 found an integrity defect** (duplicate bank credit, duplicate ledger entry) |
   | R8 | VERIFIED | keyed both levels, `abs(gap) <= TOLERANCE_PAISE`, no attributions, ledger agrees |
-  | R9 | EXPLAINED | `unexplained == 0` and at least one attribution |
+  | R9 | EXPLAINED | `unexplained == 0`, at least one attribution, **and no attributed cause is itself an integrity defect** |
   | R10 | UNRESOLVED | fallback — asserts; should be unreachable |
 
   R8 and R9 are disjoint on `len(attributed)`, not on ordering alone, so the
   "40 paise inside a 100 paise tolerance" overlap is closed independently of the
   cascade. Implemented at step 5; recorded here now because it is approved.
+- **A second SPEC 7 change, made explicitly.** Read literally, a duplicated bank
+  credit is EXPLAINED: the duplicate accounts for the entire gap, so
+  `unexplained_amount` is 0. But EXPLAINED is auto-reconcilable, and product rule 3
+  forbids silently reconciling uncertain money — a duplicated credit is money that
+  will very likely be clawed back. Attributing a gap is not the same as the gap
+  being benign, and SPEC 7 conflated the two. R9 now requires that no attributed
+  cause is itself an integrity defect, and R7 routes Level 0 duplicate findings to
+  HUMAN_REVIEW.
+
+  **Consequence, stated rather than left to be found: EXPLAINED is now sourced by
+  `fee_rate_drift` alone on this dataset.** One fault class feeds one diagonal cell,
+  so EXPLAINED precision and recall rest on a single generator behaviour. Read that
+  cell with more suspicion than the others.
 - **Step 9 (Razorpay test-mode adapter) cut.** Below the protected line, and the
-  deadline decided it.
+  deadline decided it. No test-mode credentials are held.
+- **Same-axis compound pairs are excluded at scoring, not at generation.** Keeping
+  them for study and requiring dev and held-out to differ by seed alone are only
+  consistent if generation is identical, so all three same-axis pairs are generated
+  in both splits and dropped from held-out scoring with the count reported (36 units).
 
 ## Not built, and why
 
@@ -179,6 +263,13 @@ the first next to the number, with the rest behind an expand labelled *why this
 number is qualified* — same disclosure, and nothing is behind that click which is
 not also in two plaintext files. Rendered from `afc/config.py`; the split is
 asserted to reconstitute the full text exactly.
+
+The fault-to-state ground truth was written from the SPEC 4 fault definitions and
+the SPEC 7 table alone, and committed to git before the classifier existed — the
+history, not an assertion, is the evidence. Its limit: one author wrote both the
+answer key and the classifier, so the agreement diff catches genuine slips but not
+shared blind spots. This sentence belongs with the accuracy number, not only in the
+source.
 
 No target metric is hardcoded anywhere. The engine reports what it actually
 produces, including failures.

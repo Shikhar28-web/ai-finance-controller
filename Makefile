@@ -1,9 +1,9 @@
 PY := ./.venv/bin/python
 RUFF := ./.venv/bin/ruff
 
-.PHONY: check lint firewall readme readme-write test
+.PHONY: check lint firewall readme readme-write census test
 
-check: lint firewall readme test
+check: lint firewall readme census test
 
 lint:
 	$(RUFF) check afc tools tests
@@ -16,6 +16,9 @@ readme:
 
 readme-write:
 	$(PY) tools/render_constants.py
+
+census:
+	$(PY) tools/census.py
 
 test:
 	$(PY) -m pytest

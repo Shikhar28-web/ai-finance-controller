@@ -23,6 +23,15 @@ both, one, or over-attributes across baselines is a property of the decomposer, 
 of the data. Their true state would therefore depend on runtime behaviour, which is
 precisely what an answer key may not do.
 
+RULE HISTORY. Severity ordering (UNRESOLVED > HUMAN_REVIEW > AWAITING_BANK >
+EXPLAINED > VERIFIED) was the originally approved composition rule. It was superseded
+by the axis rule below and is now retained only as a cross-check: it reproduces 7 of
+the 8 admissible pairs, disagreeing on exactly one, which is recorded inline. The
+argument for replacing it is that the axis rule, applied without reference to the
+classifier, independently excluded fee_rate_drift + duplicate_bank_credit -- the pair
+the owner had predicted would be attribution-dependent. Severity ordering would have
+admitted it.
+
 So admissibility is decided by AXIS, not by severity:
 
     a compound pair is admissible in the held-out set if and only if
@@ -113,12 +122,17 @@ SINGLE_FAULTS: dict[str, FaultSpec] = {
     ),
     "duplicate_bank_credit": FaultSpec(
         axis=GAP,
-        true_state=EXPLAINED,
-        reason="Amounts differ and the duplicate credit accounts for the entire "
-               "difference, so unexplained_amount is 0. SPEC 7 EXPLAINED, read "
-               "literally. FLAGGED FOR THE OWNER: EXPLAINED is auto-reconcilable, and "
-               "a duplicated bank credit is money that will likely be clawed back. "
-               "Routing it to a human would be a SPEC 7 change, not a mapping choice.",
+        true_state=HUMAN_REVIEW,
+        reason="SPEC 7 CHANGE, MADE EXPLICITLY BY THE OWNER -- not a mapping choice. "
+               "Read literally SPEC 7 gives EXPLAINED, because the duplicate accounts "
+               "for the whole difference and unexplained_amount is 0. But EXPLAINED is "
+               "auto-reconcilable and product rule 3 forbids silently reconciling "
+               "uncertain money; a duplicated credit will very likely be clawed back. "
+               "Attributing a gap is not the same as the gap being benign, and SPEC 7 "
+               "conflated the two. EXPLAINED now additionally requires that no "
+               "attributed cause is itself an integrity defect, and Level 0 duplicate "
+               "findings route to HUMAN_REVIEW. Consequence, recorded in the README: "
+               "EXPLAINED is sourced by fee_rate_drift alone on this dataset.",
     ),
     "orphan_bank_credit": FaultSpec(
         axis=NONE,
@@ -174,8 +188,8 @@ COMPOUND_PAIRS: dict[tuple[str, str], CompoundSpec] = {
     ),
     ("duplicate_bank_credit", "duplicate_ledger_entry"): CompoundSpec(
         HUMAN_REVIEW,
-        "Bank-side duplicate is fully attributed (EXPLAINED on its own), ledger-side "
-        "duplicate is not; the ledger axis dominates.",
+        "Both components are HUMAN_REVIEW on their own axes after the SPEC 7 change "
+        "to duplicate_bank_credit; no interaction.",
     ),
     ("bank_amount_mismatch", "duplicate_ledger_entry"): CompoundSpec(
         UNRESOLVED,
@@ -190,10 +204,13 @@ COMPOUND_PAIRS: dict[tuple[str, str], CompoundSpec] = {
     ("timing_lag", "duplicate_ledger_entry"): CompoundSpec(
         AWAITING_BANK,
         "MAPPING JUDGEMENT, NOT A SPEC 7 DERIVATION. Both conditions hold and SPEC 7 "
-        "states no precedence. Called AWAITING_BANK because the record is not yet "
-        "terminal: the credit has not arrived, so no terminal state is knowable. The "
-        "ledger fault remains true and resurfaces once the credit lands. Flagged as a "
-        "likely disagreement at the step 5 diff.",
+        "states no precedence. THE ONE PLACE THE TWO RULES DISAGREE, kept flagged "
+        "deliberately: severity ordering says HUMAN_REVIEW (the ledger fault is "
+        "nastier); the axis reading says AWAITING_BANK, because the record is not yet "
+        "terminal -- the credit has not arrived, so no terminal state is knowable, and "
+        "the ledger fault resurfaces once it lands. The owner ruled for AWAITING_BANK. "
+        "Both positions are recorded because the disagreement is itself evidence the "
+        "key was not derived mechanically from the cascade.",
     ),
 }
 
