@@ -52,6 +52,15 @@ BANNED_CALLS = {
     "uuid.uuid4": "nondeterministic id",
     "os.urandom": "nondeterministic entropy",
 }
+# Silent single-row selection. SPEC 5 calls Level 1 and Level 3 1:1 joins, but
+# duplicate_ledger_entry and duplicate_bank_credit make them 1:2 -- taking one row
+# dedups by accident and the injected fault is never detected. Group and assert
+# cardinality instead; Level 0 owns the duplicate finding.
+BANNED_SELECTORS = {
+    "first": "takes one row from a group that may legitimately hold two",
+    "one_or_none": "same: it hides the duplicate rather than reporting it",
+    "find_one": "same",
+}
 # `from X import Y` forms that smuggle the same thing past the dotted check.
 BANNED_FROM_IMPORTS = {
     ("time", "time"), ("time", "monotonic"), ("time", "perf_counter"),
@@ -206,6 +215,14 @@ def check_file(path: Path) -> list[Violation]:
                                   f"{name}() is banned in {prefix} ({why}); "
                                   f"read as_of_date from the run manifest instead")
                     )
+            _, _, leaf = name.rpartition(".")
+            if leaf in BANNED_SELECTORS and "." in name:
+                out.append(
+                    Violation(path, node.lineno, "no-silent-dedup",
+                              f"{name}() is banned in {prefix}: "
+                              f"{BANNED_SELECTORS[leaf]}. Group and assert cardinality "
+                              f"-- afc.core.integrity owns duplicate findings.")
+                )
             head, _, attr = name.rpartition(".")
             if head.split(".")[-1] == "random" and attr not in RANDOM_ALLOWED_ATTRS:
                 out.append(
@@ -237,8 +254,18 @@ def main() -> int:
           f"across {scanned} scanned modules\n", file=sys.stderr)
     for v in violations:
         print(v.render(), file=sys.stderr)
-    print("\nSPEC 3: no LLM output may be read by any classification, scoring, "
-          "matching or arithmetic code path.", file=sys.stderr)
+    notes = {
+        "import-layering": "SPEC 3: no LLM output may be read by any classification, "
+                           "scoring, matching or arithmetic code path.",
+        "sdk-containment": "SPEC 3: the vendor SDK lives behind afc.llm.client alone.",
+        "clock-ban": "SPEC 12: fixed seeds and a frozen as_of; no wall clock in a "
+                     "classification path.",
+        "no-silent-dedup": "SPEC 5: duplicates are found by grouping and asserting "
+                           "cardinality, never by taking one row.",
+    }
+    for rule in sorted({v.rule for v in violations}):
+        if rule in notes:
+            print(f"\n{notes[rule]}", file=sys.stderr)
     return 1
 
 

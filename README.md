@@ -137,9 +137,11 @@ reserve seed with reweighted class proportions, gives one cheap signal:
 | HUMAN_REVIEW | 32.2% | 13.7% | −18.5pp |
 | UNRESOLVED | 19.9% | 27.7% | +7.8pp |
 
-Results on it are reported as a **secondary number and expected to be worse**. 13 of
-its classes fall under the 15-unit floor, so its per-class figures are noisy by
-construction and it does not gate the build.
+Results on it are reported as a **secondary number and expected to be worse**, and
+**as an aggregate only** — overall accuracy and the state distribution. 13 of its
+classes fall under the 15-unit floor, so per-state precision and recall on this split
+are **deliberately not reported**: a noisy per-class table invites more weight than it
+can carry. It does not gate the build.
 
 See **Limits that travel with the number** under Honesty — the density, base-rate and composition caveats are reported with the accuracy figure, not here.
 
@@ -185,11 +187,33 @@ Each of these was raised with the owner and approved before any code was written
   reported 100% while doing no work. We ship a **Level 0 integrity pass plus two
   matching levels** (payment axis, and settlement↔bank axis). This project does not
   claim a three-level matcher.
-- **Level 0 added.** Duplicate and completeness detection, run before the matching
-  levels. SPEC 5 declares Level 1 and Level 3 as 1:1 joins, but `duplicate_ledger_entry`
-  produces 1:2 — a 1:1 join would silently dedup and never detect the fault it was
-  graded on. Level 0 does group-by-count on ledger rows by `payment_id` and bank rows
-  by UTR, plus a refund-completeness check, and `.first()` is banned in matcher joins.
+- **Level 0 added.** Duplicate detection, run before the matching levels. SPEC 5
+  declares Level 1 and Level 3 as 1:1 joins, but `duplicate_ledger_entry` produces 1:2
+  — a 1:1 join would silently dedup and never detect the fault it was graded on.
+  `.first()`, `.one_or_none()` and `.find_one()` are banned in the guarded packages,
+  enforced by `tools/check_imports.py`.
+
+  **Counting is pinned**, because three different numbers get called "duplicates" and
+  only one of them is a duplicate count: *groups* (keys appearing more than once),
+  *excess rows* (rows in those groups minus one each), and *group members* (every row
+  in those groups). At a duplication factor of exactly 2 the first two coincide — 106
+  and 106 — while members is 212. Level 0 emits **one finding per group**; flagging
+  members would double-count and pull clean records into HUMAN_REVIEW through R7,
+  an error that reads like a classifier result rather than a counting bug. Expected
+  counts in tests are derived from the injection plan *and* from ground truth
+  independently, never written as literals.
+
+  **Bank rows group by extracted UTR, never by narration.** Every `missing_utr`
+  settlement writes the same narration text, so grouping on narration merges unrelated
+  settlements into a phantom duplicate group — 6 groups and 8 excess rows instead of
+  the true 5 and 5. Rows with no extractable UTR cannot be keyed at all; they are
+  excluded from the check and reported.
+
+  **Findings carry their axis.** `duplicate_ledger_entry` and `duplicate_bank_credit`
+  both reach HUMAN_REVIEW but by different clauses — the R7 ledger clause and the R9
+  integrity amendment. An undifferentiated flag would leave the cascade unable to pick
+  the right rule, and the step-5 diff would report a plumbing gap as a mapping
+  disagreement.
 - **Fault table cut from 14 to 10** (plus compound built from those): `fee_rate_drift`,
   `missing_utr`, `bank_credit_missing`, `bank_amount_mismatch`, `refund_not_in_ledger`,
   `duplicate_ledger_entry`, `duplicate_bank_credit`, `orphan_bank_credit`, `timing_lag`,

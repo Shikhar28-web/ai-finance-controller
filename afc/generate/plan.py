@@ -155,3 +155,17 @@ SHIFTED = Targets(
     },
     orphans=30,
 )
+
+
+def expected_ledger_duplicate_units(t: Targets = DEFAULT) -> int:
+    """Payments carrying duplicate_ledger_entry, derived from the plan.
+
+    Derived rather than written down: a literal in a test passes whether or not the
+    logic under test is right. Cross-checked in tests against an independent count
+    taken from the generator's ground truth.
+    """
+    return t.ledger.get("duplicate_ledger_entry", 0) + sum(
+        n
+        for pair, n in {**t.compound, **t.dev_only}.items()
+        if "duplicate_ledger_entry" in pair
+    )
