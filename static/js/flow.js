@@ -44,59 +44,69 @@ function renderTransactionFlow(flow, containerId) {
   };
 
   container.innerHTML = `
-    <div class="flow-nodes">
+    <div class="flow-container-inner" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:32px 0;">
       <!-- Payment Node -->
       <div class="flow-node">
-        <div class="flow-node-circle match">💳</div>
-        <div class="flow-node-label">Payment</div>
-        <div class="flow-node-value">${paise(payment.gross_paise)}</div>
-        <div style="font-size:10px;color:var(--text-muted)" class="mono">${payment.payment_id}</div>
+        <div class="flow-icon match">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+        </div>
+        <div class="flow-details">
+          <div class="flow-title">Payment</div>
+          <div class="flow-amount">${paise(payment.gross_paise)}</div>
+          <div class="flow-sub mono">${payment.payment_id}</div>
+        </div>
       </div>
 
-      <div class="flow-arrow ${paymentOk && settlementOk ? 'match' : 'mismatch'}"></div>
+      <div class="flow-connector ${paymentOk && settlementOk ? 'match' : 'mismatch'}"></div>
 
       <!-- Settlement Node -->
       <div class="flow-node">
-        <div class="flow-node-circle ${settlementOk ? stateClass : 'missing'}">📋</div>
-        <div class="flow-node-label">Settlement</div>
-        <div class="flow-node-value">${settlement ? settlement.settlement_id : 'Missing'}</div>
-        <div style="font-size:10px;color:var(--text-muted)" class="mono">
-          ${settlement ? (settlement.utr || 'No UTR') : '—'}
+        <div class="flow-icon ${settlementOk ? stateClass : 'missing'}">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </div>
+        <div class="flow-details">
+          <div class="flow-title">Settlement</div>
+          <div class="flow-amount">${settlement ? settlement.settlement_id : 'Missing'}</div>
+          <div class="flow-sub mono" title="${settlement?.utr || ''}">${settlement ? (settlement.utr || 'No UTR') : '—'}</div>
         </div>
       </div>
 
-      <div class="flow-arrow ${bankStatus === 'missing' ? '' : stateClass}"></div>
+      <div class="flow-connector ${bankStatus === 'missing' ? '' : stateClass}"></div>
 
       <!-- Bank Node -->
       <div class="flow-node">
-        <div class="flow-node-circle ${bankStatus}">🏦</div>
-        <div class="flow-node-label">Bank Credit</div>
-        <div class="flow-node-value">${bankStatus === 'missing' ? 'Pending' : paise(payment.gross_paise)}</div>
-        <div style="font-size:10px;color:var(--text-muted)" class="mono">
-          ${settlement?.due_on ? `Due: ${settlement.due_on}` : '—'}
+        <div class="flow-icon ${bankStatus}">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+        </div>
+        <div class="flow-details">
+          <div class="flow-title">Bank Credit</div>
+          <div class="flow-amount">${bankStatus === 'missing' ? 'Pending' : paise(payment.gross_paise)}</div>
+          <div class="flow-sub mono">${settlement?.due_on ? `Due: ${settlement.due_on}` : '—'}</div>
         </div>
       </div>
 
-      <div class="flow-arrow ${ledgerOk ? 'match' : 'mismatch'}"></div>
+      <div class="flow-connector ${ledgerOk ? 'match' : 'mismatch'}"></div>
 
       <!-- Ledger Node -->
       <div class="flow-node">
-        <div class="flow-node-circle ${ledgerOk ? 'match' : 'mismatch'}">📒</div>
-        <div class="flow-node-label">Ledger</div>
-        <div class="flow-node-value">${ledger ? paise(ledger.amount_paise) : 'Missing'}</div>
-        <div style="font-size:10px;color:var(--text-muted)" class="mono">
-          ${ledger ? ledger.ledger_id : '—'}
+        <div class="flow-icon ${ledgerOk ? 'match' : 'mismatch'}">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        </div>
+        <div class="flow-details">
+          <div class="flow-title">Ledger Record</div>
+          <div class="flow-amount">${ledger ? paise(ledger.amount_paise) : 'Missing'}</div>
+          <div class="flow-sub mono">${ledger ? ledger.ledger_id : '—'}</div>
         </div>
       </div>
     </div>
 
     <!-- Flow summary -->
-    <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color)">
-      <span class="badge badge-${state.toLowerCase().replace('_','-')}" style="font-size:12px;padding:6px 14px">
+    <div style="text-align:center;margin-top:16px;padding-top:24px;border-top:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;gap:12px">
+      <span class="badge badge-${state.toLowerCase().replace('_','-')}" style="font-size:13px;padding:8px 16px;letter-spacing:0.02em">
         ${state}
       </span>
-      <span style="margin-left:12px;font-size:12px;color:var(--text-muted)">
-        Rule ${flow.rule} · ${flow.unit_kind}
+      <span style="font-size:13px;color:var(--text-muted)">
+        Rule ${flow.rule} · ${flow.unit_kind.charAt(0).toUpperCase() + flow.unit_kind.slice(1)} Routing
       </span>
     </div>
   `;

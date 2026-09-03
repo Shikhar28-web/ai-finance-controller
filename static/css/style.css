@@ -441,6 +441,126 @@ body::before {
 .btn-sm { padding: 5px 10px; font-size: 12px; }
 .btn-lg { padding: 12px 22px; font-size: 14px; }
 
+/* ================================================================ TRANSACTION FLOW DIAGRAM */
+.flow-container-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow-x: auto;
+  padding: 24px 0;
+}
+
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 140px;
+  flex-shrink: 0;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.flow-node:hover {
+  transform: translateY(-4px);
+}
+
+.flow-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-md);
+  z-index: 2;
+  transition: all 0.3s ease;
+  color: var(--text-muted);
+}
+
+.flow-icon.match {
+  border-color: var(--verified);
+  background: rgba(16, 185, 129, 0.05);
+  color: var(--verified);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.flow-icon.warning {
+  border-color: var(--awaiting);
+  background: rgba(245, 158, 11, 0.05);
+  color: var(--awaiting);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.flow-icon.mismatch {
+  border-color: var(--unresolved);
+  background: rgba(244, 63, 94, 0.05);
+  color: var(--unresolved);
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.2);
+}
+
+.flow-icon.missing {
+  border-color: var(--border-subtle);
+  border-style: dashed;
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.flow-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flow-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.flow-amount {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+}
+
+.flow-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  margin: 0 auto;
+}
+
+.flow-connector {
+  flex-grow: 1;
+  min-width: 40px;
+  max-width: 80px;
+  height: 2px;
+  background: var(--border-strong);
+  position: relative;
+  top: -34px;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.flow-connector.match {
+  background: var(--verified);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.flow-connector.mismatch {
+  background: var(--unresolved);
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+}
+
 .form-group { margin-bottom: 16px; }
 
 .form-label {
@@ -674,10 +794,11 @@ body::before {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
   padding: 28px;
-  max-width: 640px;
-  width: 92%;
+  max-width: 900px;
+  width: 95%;
   max-height: 85vh;
   overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
 }
 
 /* Spinner */

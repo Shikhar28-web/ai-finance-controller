@@ -286,24 +286,40 @@ function showTransactionDetail(unitId) {
   let decompHtml = '';
   if (decomp) {
     decompHtml = `
-      <div style="margin-top:16px">
-        <h4 style="font-size:14px;margin-bottom:8px">Gap Analysis</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
-          <div>Expected (contracted): <strong class="mono">${paise(decomp.expected_paise)}</strong></div>
-          <div>Actual bank credit: <strong class="mono">${paise(decomp.actual_paise)}</strong></div>
-          <div>Gap: <strong class="mono" style="color:${decomp.gap_paise !== 0 ? 'var(--unresolved)' : 'var(--verified)'}">${paise(decomp.gap_paise)}</strong></div>
-          <div>Unexplained: <strong class="mono" style="color:${decomp.unexplained_paise !== 0 ? 'var(--human-review)' : 'var(--verified)'}">${paise(decomp.unexplained_paise)}</strong></div>
+      <div>
+        <h4 style="font-size:14px;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:8px">
+          <span>🔍</span> Gap Analysis
+        </h4>
+        <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;font-size:13px;background:rgba(255,255,255,0.02)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="color:var(--text-muted)">Expected (Contracted):</span>
+            <span class="mono" style="font-weight:600">${paise(decomp.expected_paise)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="color:var(--text-muted)">Actual Bank Credit:</span>
+            <span class="mono" style="font-weight:600">${paise(decomp.actual_paise)}</span>
+          </div>
+          <div style="height:1px;background:var(--border-strong);margin:4px 0"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-weight:700">Gap:</span>
+            <span class="mono" style="font-weight:700;color:${decomp.gap_paise !== 0 ? 'var(--unresolved)' : 'var(--verified)'}">${paise(decomp.gap_paise)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-weight:700">Unexplained Drift:</span>
+            <span class="mono" style="font-weight:800;font-size:16px;color:${decomp.unexplained_paise !== 0 ? 'var(--human-review)' : 'var(--verified)'}">${paise(decomp.unexplained_paise)}</span>
+          </div>
         </div>
+
         ${decomp.attributed?.length ? `
-          <div style="margin-top:12px">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Attributed Causes:</div>
+          <div style="margin-top:20px">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600">Attributed Causes</div>
             ${decomp.attributed.map(a => `
-              <div style="padding:8px 12px;background:var(--bg-input);border-radius:6px;margin-bottom:4px;font-size:12px">
-                <div style="display:flex;justify-content:space-between">
-                  <span style="color:var(--text-accent)">${a.cause}</span>
-                  <span class="mono" style="font-weight:600">${paise(a.amount_paise)}</span>
+              <div style="padding:12px 16px;background:var(--bg-input);border-radius:8px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.05)">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                  <span style="color:var(--text-main);font-weight:600">${a.cause.replace(/_/g, ' ')}</span>
+                  <span class="mono" style="font-weight:700;color:var(--awaiting)">${paise(a.amount_paise)}</span>
                 </div>
-                <div style="color:var(--text-muted);font-size:11px;margin-top:2px">${a.proof || ''}</div>
+                <div style="color:var(--text-muted);font-size:11px">${a.proof || ''}</div>
               </div>
             `).join('')}
           </div>
@@ -321,76 +337,91 @@ function showTransactionDetail(unitId) {
   const modal = document.getElementById('txn-modal');
   document.getElementById('txn-modal-title').textContent = `Transaction: ${unitId}`;
   document.getElementById('txn-modal-body').innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <span class="badge badge-${decision.state.toLowerCase().replace('_','-')}" style="font-size:13px;padding:6px 16px">
-        ${decision.state}
-      </span>
-      <span style="font-size:13px;color:var(--text-muted)">Rule ${decision.rule} · Confidence ${(decision.confidence?.score || 0).toFixed(3)}</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid var(--border-strong);padding-bottom:20px">
+      <div style="display:flex;align-items:center;gap:16px">
+        <span class="badge badge-${decision.state.toLowerCase().replace('_','-')}" style="font-size:14px;padding:8px 18px;font-weight:700">
+          ${decision.state}
+        </span>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:13px;color:var(--text-main);font-weight:600">Classification Rule: ${decision.rule}</span>
+          <span style="font-size:11px;color:var(--text-muted)">Confidence Score: <span style="color:${(decision.confidence?.score||0)>=0.9?'var(--verified)':((decision.confidence?.score||0)>=0.6?'var(--awaiting)':'var(--unresolved)')}">${(decision.confidence?.score || 0).toFixed(3)}</span></span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600">Verification Checks</div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;max-width:300px">${checksHtml}</div>
+      </div>
     </div>
 
-    ${flow?.payment ? `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;margin-bottom:16px">
-      <div class="card" style="padding:12px">
-        <div class="card-title" style="margin-bottom:4px">Payment</div>
-        <div class="mono" style="font-size:12px">${flow.payment.payment_id}</div>
-        <div style="font-size:18px;font-weight:700;margin-top:4px" class="num">${paise(flow.payment.gross_paise)}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${flow.payment.captured_on}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+      <!-- Left Column: Details -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+        ${flow?.payment ? `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card" style="padding:16px;background:rgba(255,255,255,0.02)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <span style="font-size:16px">💳</span><span class="card-title" style="margin:0">Payment Node</span>
+            </div>
+            <div class="mono" style="font-size:12px;color:var(--text-accent);margin-bottom:8px">${flow.payment.payment_id}</div>
+            <div style="font-size:24px;font-weight:800;color:var(--text-main)" class="num">${paise(flow.payment.gross_paise)}</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:4px">${flow.payment.captured_on}</div>
+          </div>
+          <div class="card" style="padding:16px;background:rgba(255,255,255,0.02)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <span style="font-size:16px">📋</span><span class="card-title" style="margin:0">Settlement Node</span>
+            </div>
+            <div class="mono" style="font-size:12px;color:var(--text-accent);margin-bottom:8px">${flow.settlement?.settlement_id || 'N/A'}</div>
+            <div style="font-size:11px;color:var(--text-muted)">UTR: <span style="color:var(--text-main)">${flow.settlement?.utr || 'None'}</span></div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Due: <span style="color:var(--text-main)">${flow.settlement?.due_on || 'N/A'}</span></div>
+          </div>
+        </div>` : ''}
+
+        ${(() => {
+          if (!flow?.payment) return '';
+          const gross = flow.payment.gross_paise;
+          const mdr_bps = 190;
+          const gst_bps = 1800;
+          const calcFee = (amt, bps) => {
+            const num = amt * bps; const den = 10000;
+            if (num >= 0) return Math.floor((num * 2 + den) / (den * 2));
+            return -Math.floor((-num * 2 + den) / (den * 2));
+          };
+          const mdr_paise = calcFee(gross, mdr_bps);
+          const gst_paise = calcFee(mdr_paise, gst_bps);
+          const net_paise = gross - mdr_paise - gst_paise;
+
+          return `
+          <div>
+            <h4 style="font-size:14px;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:8px">
+              <span>⚖️</span> Tax & Fee Segregation (Contracted)
+            </h4>
+            <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;font-size:13px;background:rgba(255,255,255,0.02)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text-muted)">Gross Payment:</span>
+                <span class="mono" style="font-weight:600;font-size:14px">${paise(gross)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text-muted)">MDR Fee (1.90%):</span>
+                <span class="mono" style="color:var(--unresolved)">${paise(-mdr_paise)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text-muted)">GST on Fee (18.00%):</span>
+                <span class="mono" style="color:var(--unresolved)">${paise(-gst_paise)}</span>
+              </div>
+              <div style="height:1px;background:var(--border-strong);margin:4px 0"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-weight:700;color:var(--text-main)">Expected Net Bank Credit:</span>
+                <span class="mono" style="font-weight:800;color:var(--verified);font-size:16px">${paise(net_paise)}</span>
+              </div>
+            </div>
+          </div>`;
+        })()}
       </div>
-      <div class="card" style="padding:12px">
-        <div class="card-title" style="margin-bottom:4px">Settlement</div>
-        <div class="mono" style="font-size:12px">${flow.settlement?.settlement_id || 'N/A'}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">UTR: ${flow.settlement?.utr || 'None'}</div>
-        <div style="font-size:11px;color:var(--text-muted)">Due: ${flow.settlement?.due_on || 'N/A'}</div>
+
+      <!-- Right Column: Analysis -->
+      <div style="display:flex;flex-direction:column;gap:20px;padding-left:24px;border-left:1px solid var(--border-strong)">
+        ${decompHtml}
       </div>
-    </div>` : ''}
-
-    ${(() => {
-      if (!flow?.payment) return '';
-      const gross = flow.payment.gross_paise;
-      const mdr_bps = 190;
-      const gst_bps = 1800;
-
-      const calcFee = (amt, bps) => {
-        const num = amt * bps;
-        const den = 10000;
-        if (num >= 0) return Math.floor((num * 2 + den) / (den * 2));
-        return -Math.floor((-num * 2 + den) / (den * 2));
-      };
-
-      const mdr_paise = calcFee(gross, mdr_bps);
-      const gst_paise = calcFee(mdr_paise, gst_bps);
-      const net_paise = gross - mdr_paise - gst_paise;
-
-      return `
-      <div style="margin-top:16px">
-        <h4 style="font-size:14px;margin-bottom:8px">Tax & Fee Segregation (Contracted Rates)</h4>
-        <div class="card" style="padding:12px;display:flex;flex-direction:column;gap:8px;font-size:13px;background:var(--bg-input)">
-          <div style="display:flex;justify-content:space-between">
-            <span style="color:var(--text-muted)">Gross Payment:</span>
-            <span class="mono" style="font-weight:600">${paise(gross)}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between">
-            <span style="color:var(--text-muted)">MDR Fee (1.90%):</span>
-            <span class="mono" style="color:var(--unresolved)">${paise(-mdr_paise)}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between">
-            <span style="color:var(--text-muted)">GST on Fee (18.00%):</span>
-            <span class="mono" style="color:var(--unresolved)">${paise(-gst_paise)}</span>
-          </div>
-          <div style="height:1px;background:var(--border-subtle);margin:4px 0"></div>
-          <div style="display:flex;justify-content:space-between">
-            <span style="font-weight:600">Expected Net Bank Credit:</span>
-            <span class="mono" style="font-weight:700;color:var(--verified)">${paise(net_paise)}</span>
-          </div>
-        </div>
-      </div>`;
-    })()}
-
-    ${decompHtml}
-
-    <div style="margin-top:16px">
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Confidence Checks:</div>
-      <div style="line-height:2">${checksHtml}</div>
     </div>
   `;
 
