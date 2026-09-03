@@ -22,9 +22,9 @@
   --border-strong: rgba(255, 255, 255, 0.1);
 
   --text-main: #FFFFFF;
-  --text-muted: #8B9BB4;
-  --text-dim: #6B7B94;
-  --text-accent: #A3B5D1;
+  --text-muted: #B4C6E4;
+  --text-dim: #94A6C5;
+  --text-accent: #E2E8F0;
 
   /* State Tokens */
   --verified: #10B981;

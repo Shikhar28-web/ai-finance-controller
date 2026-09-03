@@ -362,7 +362,7 @@ function showTransactionDetail(unitId) {
       }
       
       return `
-        <div style="display:flex;align-items:center;gap:6px;background:${colorClass};padding:4px 8px;border-radius:12px;font-size:11px;font-weight:600;color:${textClass}">
+        <div style="display:flex;align-items:center;gap:6px;background:${colorClass};padding:6px 12px;border-radius:16px;border:1px solid ${textClass};font-size:12px;font-weight:700;color:${textClass}">
           ${icon}
           ${name.replace(/_/g, ' ')}
         </div>
