@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Finance Controller — Reconciliation Dashboard</title>
+  <meta name="description" content="Intelligent payment reconciliation for Razorpay merchants. Track every rupee across payments, settlements, bank credits, and ledger entries.">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-container">
+
+  <!-- ============================================================ NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="navbar-inner">
+      <a href="#" class="navbar-brand" onclick="navigate('dashboard')">
+        <div class="logo">₹</div>
+        <div>
+          <div class="brand-text">AI Finance Controller</div>
+          <div class="brand-sub">Reconciliation Engine</div>
+        </div>
+      </a>
+      <div class="navbar-actions" id="nav-actions">
+        <!-- Filled by JS based on auth state -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================================ AUTH PAGE -->
+  <div id="page-auth" class="page">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-title" id="auth-title">Sign In</div>
+        <div class="auth-subtitle" id="auth-subtitle">Welcome back to your finance dashboard</div>
+        <form id="auth-form" onsubmit="handleAuth(event)">
+          <div class="form-group">
+            <label class="form-label" for="auth-email">Email</label>
+            <input class="form-input" type="email" id="auth-email" placeholder="you@company.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="auth-password">Password</label>
+            <input class="form-input" type="password" id="auth-password" placeholder="••••••••" required minlength="4">
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:8px" id="auth-submit">
+            Sign In
+          </button>
+        </form>
+        <div class="auth-footer" id="auth-footer">
+          Don't have an account? <a href="#" onclick="toggleAuthMode()">Create one</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ DASHBOARD PAGE -->
+  <div id="page-dashboard" class="page">
+    <div class="main-content">
+
+      <!-- Empty State (shown when no data) -->
+      <div id="dashboard-empty" class="empty-state" style="display:none">
+        <div class="empty-icon">📊</div>
+        <h3>No Reconciliation Data Yet</h3>
+        <p>Connect your Razorpay account, upload bank statements, then run reconciliation to see results.</p>
+        <div style="margin-top:24px;display:flex;gap:12px;justify-content:center">
+          <button class="btn btn-primary" onclick="navigate('settings')">⚙️ Setup</button>
+          <button class="btn btn-success" onclick="runReconciliation('synthetic')">🧪 Run Demo</button>
+        </div>
+      </div>
+
+      <!-- Dashboard Content (shown when data exists) -->
+      <div id="dashboard-content" style="display:none">
+
+        <!-- KPI Cards Row -->
+        <div class="kpi-grid" id="kpi-grid">
+          <div class="card kpi-card total animate-in stagger-1">
+            <div class="kpi-icon" style="background:rgba(99,102,241,0.1)">📊</div>
+            <div class="card-title">Total Transactions</div>
+            <div class="card-value num" id="kpi-total">—</div>
+            <div class="card-subtitle" id="kpi-total-sub">recon units scored</div>
+          </div>
+          <div class="card kpi-card verified animate-in stagger-2">
+            <div class="kpi-icon">✅</div>
+            <div class="card-title">Verified</div>
+            <div class="card-value num" id="kpi-verified">—</div>
+            <div class="card-subtitle">fully matched</div>
+          </div>
+          <div class="card kpi-card explained animate-in stagger-3">
+            <div class="kpi-icon">🔍</div>
+            <div class="card-title">Explained</div>
+            <div class="card-value num" id="kpi-explained">—</div>
+            <div class="card-subtitle">differences attributed</div>
+          </div>
+          <div class="card kpi-card human-review animate-in stagger-4">
+            <div class="kpi-icon">👤</div>
+            <div class="card-title">Human Review</div>
+            <div class="card-value num" id="kpi-human">—</div>
+            <div class="card-subtitle">needs attention</div>
+          </div>
+          <div class="card kpi-card unresolved animate-in stagger-5">
+            <div class="kpi-icon">❌</div>
+            <div class="card-title">Unresolved</div>
+            <div class="card-value num" id="kpi-unresolved">—</div>
+            <div class="card-subtitle">serious issues</div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-grid">
+          <div class="card animate-in stagger-2">
+            <div class="card-title">State Distribution</div>
+            <div class="chart-container"><canvas id="chart-donut"></canvas></div>
+          </div>
+          <div class="card animate-in stagger-3">
+            <div class="card-title">Confidence Distribution</div>
+            <div class="chart-container"><canvas id="chart-confidence"></canvas></div>
+          </div>
+          <div class="card animate-in stagger-4">
+            <div class="card-title">Money Impact by State</div>
+            <div class="chart-container"><canvas id="chart-money"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Gauges Row -->
+        <div class="gauges-row">
+          <div class="card gauge-card animate-in stagger-1">
+            <div class="gauge-ring" id="gauge-coverage"></div>
+            <div class="card-title" style="margin-bottom:0">Coverage</div>
+            <div class="card-subtitle">auto-resolved without human</div>
+          </div>
+          <div class="card gauge-card animate-in stagger-2">
+            <div class="gauge-ring" id="gauge-accuracy"></div>
+            <div class="card-title" style="margin-bottom:0">Accuracy</div>
+            <div class="card-subtitle">classification correctness</div>
+          </div>
+          <div class="card gauge-card animate-in stagger-3">
+            <div class="gauge-ring" id="gauge-match-rate"></div>
+            <div class="card-title" style="margin-bottom:0">Match Rate</div>
+            <div class="card-subtitle">bank-settlement matching</div>
+          </div>
+          <div class="card gauge-card animate-in stagger-4">
+            <div style="text-align:center;padding:20px 0">
+              <div class="card-value small num" id="gauge-throughput" style="color:var(--text-accent)">—</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px">records/sec</div>
+            </div>
+            <div class="card-title" style="margin-bottom:0">Throughput</div>
+            <div class="card-subtitle">processing speed</div>
+          </div>
+        </div>
+
+        <!-- Exception Table -->
+        <div class="card animate-in" style="margin-bottom:24px">
+          <div class="section-header">
+            <div class="section-title">Exception List</div>
+            <div id="exception-count" class="text-muted" style="font-size:13px"></div>
+          </div>
+
+          <div class="table-filters" id="table-filters">
+            <button class="filter-chip active" onclick="filterTable('all')">All</button>
+            <button class="filter-chip" onclick="filterTable('HUMAN_REVIEW')">👤 Human Review</button>
+            <button class="filter-chip" onclick="filterTable('UNRESOLVED')">❌ Unresolved</button>
+            <button class="filter-chip" onclick="filterTable('AWAITING_BANK')">⏳ Awaiting Bank</button>
+            <button class="filter-chip" onclick="filterTable('VERIFIED')">✅ Verified</button>
+            <button class="filter-chip" onclick="filterTable('EXPLAINED')">🔍 Explained</button>
+          </div>
+
+          <div class="table-wrapper" style="max-height:500px;overflow-y:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Rule</th>
+                  <th>Confidence</th>
+                  <th>Routing</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="exception-table-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Transaction Flow (shown on click) -->
+        <div class="card animate-in" style="margin-bottom:24px" id="flow-section" style="display:none">
+          <div class="section-header">
+            <div class="section-title">💸 Transaction Money Trail</div>
+            <div class="text-muted" style="font-size:13px" id="flow-title">Click a transaction to see its flow</div>
+          </div>
+          <div class="flow-container" id="flow-container">
+            <div class="empty-state" style="padding:30px" id="flow-empty">
+              <div style="font-size:32px;opacity:0.3">💸</div>
+              <p style="font-size:13px">Select a transaction from the table above to visualize its money trail</p>
+            </div>
+            <div id="flow-content" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- Run info footer -->
+        <div style="text-align:center;padding:16px;color:var(--text-muted);font-size:12px" id="run-info"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ SETTINGS PAGE -->
+  <div id="page-settings" class="page">
+    <div class="main-content">
+      <h2 style="font-size:24px;margin-bottom:24px">⚙️ Settings</h2>
+
+      <div class="settings-grid">
+        <!-- Razorpay Connection -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom:4px">Razorpay Connection</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Connect your Razorpay Test Mode account</div>
+          <div id="razorpay-status" class="connection-status disconnected" style="margin-bottom:16px">
+            ⊘ Not connected
+          </div>
+          <form id="razorpay-form" onsubmit="connectRazorpay(event)">
+            <div class="form-group">
+              <label class="form-label">Key ID</label>
+              <input class="form-input mono" type="text" id="rz-key-id" placeholder="rzp_test_...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Key Secret</label>
+              <input class="form-input mono" type="password" id="rz-key-secret" placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn btn-primary">Connect Razorpay</button>
+          </form>
+          <div style="margin-top:16px">
+            <button class="btn btn-secondary btn-sm" onclick="fetchRazorpayData()">📥 Fetch Razorpay Data</button>
+            <div id="razorpay-fetch-result" style="margin-top:8px;font-size:12px;color:var(--text-muted)"></div>
+          </div>
+        </div>
+
+        <!-- Bank Statement Upload -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom:4px">Bank Statements</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Upload CSV statements from one or more banks</div>
+
+          <div class="form-group">
+            <label class="form-label">Bank Name (optional)</label>
+            <select class="form-input" id="bank-name-select">
+              <option value="">Auto-detect</option>
+              <option value="HDFC">HDFC Bank</option>
+              <option value="ICICI">ICICI Bank</option>
+              <option value="SBI">State Bank of India</option>
+              <option value="Axis">Axis Bank</option>
+              <option value="Kotak">Kotak Mahindra Bank</option>
+              <option value="Yes Bank">Yes Bank</option>
+              <option value="PNB">Punjab National Bank</option>
+              <option value="BOB">Bank of Baroda</option>
+            </select>
+          </div>
+
+          <div class="upload-area" id="upload-area" onclick="document.getElementById('bank-file').click()">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">Drop CSV file here or click to browse</div>
+            <div class="upload-hint">Supports HDFC, ICICI, SBI, Axis, Kotak and more</div>
+            <input type="file" id="bank-file" accept=".csv" style="display:none" onchange="uploadBankStatement(this)">
+          </div>
+
+          <ul class="file-list" id="upload-list"></ul>
+        </div>
+      </div>
+
+      <!-- Reconciliation Controls -->
+      <div class="card" style="margin-top:24px">
+        <div class="section-title" style="margin-bottom:4px">Run Reconciliation</div>
+        <div class="card-subtitle" style="margin-bottom:16px">Process your data through the reconciliation pipeline</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-lg" onclick="runReconciliation('live')" id="btn-run-live">
+            🚀 Reconcile Live Data
+          </button>
+          <button class="btn btn-secondary btn-lg" onclick="runReconciliation('synthetic')">
+            🧪 Run Demo (Synthetic Data)
+          </button>
+        </div>
+        <div id="reconcile-status" style="margin-top:12px;font-size:13px;color:var(--text-muted)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ COPILOT -->
+  <button class="copilot-toggle" id="copilot-toggle" onclick="toggleCopilot()" title="AI Copilot">🤖</button>
+  <div class="overlay" id="copilot-overlay" onclick="toggleCopilot()"></div>
+  <div class="copilot-panel" id="copilot-panel">
+    <div class="copilot-header">
+      <h3>🤖 AI Finance Copilot</h3>
+      <button class="copilot-close" onclick="toggleCopilot()">✕</button>
+    </div>
+    <div class="copilot-messages" id="copilot-messages">
+      <div class="copilot-msg bot">
+        👋 Hi! I'm your AI Finance Copilot. Ask me anything about your reconciliation results.
+
+Try these:
+• "Show me a summary"
+• "What's unresolved?"
+• "How much money is under review?"
+• "Show me all exceptions"
+• "What's the confidence distribution?"
+      </div>
+    </div>
+    <div class="copilot-input-area">
+      <input class="copilot-input" type="text" id="copilot-input" placeholder="Ask about your reconciliation..." onkeydown="if(event.key==='Enter')sendCopilotMessage()">
+      <button class="copilot-send" onclick="sendCopilotMessage()">➤</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ TRANSACTION DETAIL MODAL -->
+  <div class="modal-backdrop" id="txn-modal">
+    <div class="modal" id="txn-modal-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="modal-title" id="txn-modal-title">Transaction Detail</div>
+        <button class="copilot-close" onclick="closeModal()">✕</button>
+      </div>
+      <div id="txn-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading" style="display:none">
+    <div class="spinner"></div>
+    <div style="color:var(--text-secondary);font-size:14px" id="loading-text">Processing...</div>
+  </div>
+
+</div>
+
+<script src="js/charts.js"></script>
+<script src="js/flow.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

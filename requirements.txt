@@ -1,0 +1,5 @@
+flask>=3.0
+flask-cors>=4.0
+pyjwt>=2.8
+razorpay>=1.4
+python-dotenv>=1.0
