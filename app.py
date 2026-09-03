@@ -335,11 +335,33 @@ def get_transaction_detail(unit_id):
     })
 
 
-# ================================================================ Copilot routes
+from server.copilot import ask_copilot
+from server.recon_qa_agent import ReconciliationQAAgent
+
+
+# ================================================================ Q&A Agent routes
+@app.route("/api/agent/qa", methods=["POST"])
+@login_required
+def recon_qa_agent_ask():
+    data = request.get_json() or {}
+    question = data.get("question", "").strip()
+
+    if not question:
+        return jsonify({"error": "Question is required"}), 400
+
+    run = get_latest_reconciliation(request.user_id)
+    results = run["results"] if run else {}
+    metrics = run["metrics"] if run else {}
+
+    agent = ReconciliationQAAgent(results, metrics)
+    answer = agent.answer(question)
+    return jsonify({"answer": answer, "question": question, "agent": "ReconciliationQAAgent"})
+
+
 @app.route("/api/copilot/ask", methods=["POST"])
 @login_required
 def copilot_ask():
-    data = request.get_json()
+    data = request.get_json() or {}
     question = data.get("question", "").strip()
 
     if not question:
@@ -351,8 +373,10 @@ def copilot_ask():
             "answer": "No reconciliation data available. Please run reconciliation first, then ask me questions about the results."
         })
 
-    answer = ask_copilot(question, run["results"], run["metrics"])
-    return jsonify({"answer": answer, "question": question})
+    # Route through dedicated ReconciliationQAAgent for strict domain-bounded answers
+    agent = ReconciliationQAAgent(run["results"], run["metrics"])
+    answer = agent.answer(question)
+    return jsonify({"answer": answer, "question": question, "agent": "ReconciliationQAAgent"})
 
 
 # ================================================================ Helper functions
