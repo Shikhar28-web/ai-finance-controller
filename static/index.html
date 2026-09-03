@@ -15,14 +15,17 @@
   <nav class="navbar" id="navbar">
     <div class="navbar-inner">
       <div class="brand-wrapper">
-        <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:12px" onclick="navigate('dashboard')">
-          <div class="rzp-emblem">R</div>
+        <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:14px" onclick="navigate('dashboard')">
+          <div style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;background:#3395ff;border-radius:10px;box-shadow:0 4px 14px rgba(51,149,255,0.4)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21.9999 4H16.9999L14.9999 15H11.9999L13.9999 4H1.9999V8H9.2799L6.5499 23H11.5499L12.9999 15H19.9999L21.9999 4Z" fill="white"/>
+            </svg>
+          </div>
           <div>
-            <div class="brand-title">Razorpay Recon Engine</div>
-            <div style="font-size:11px;color:var(--text-dim)">MID: RZP_MERCHANT_PROD</div>
+            <div style="font-size:18px;font-weight:800;color:#ffffff;letter-spacing:-0.03em;line-height:1.2">Razorpay</div>
+            <div style="font-size:13px;color:var(--text-muted);font-weight:500">Finance Controller</div>
           </div>
         </a>
-        <span class="brand-badge">Test Mode</span>
       </div>
       <div class="nav-actions" id="nav-actions">
         <!-- JS Auth State -->
@@ -35,7 +38,11 @@
     <div style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);padding:24px">
       <div class="card" style="width:100%;max-width:400px;padding:36px">
         <div style="text-align:center;margin-bottom:24px">
-          <div class="rzp-emblem" style="margin:0 auto 12px;width:44px;height:44px;font-size:24px">R</div>
+          <div style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;background:#3395ff;border-radius:12px;box-shadow:0 4px 14px rgba(51,149,255,0.4);margin:0 auto 16px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21.9999 4H16.9999L14.9999 15H11.9999L13.9999 4H1.9999V8H9.2799L6.5499 23H11.5499L12.9999 15H19.9999L21.9999 4Z" fill="white"/>
+            </svg>
+          </div>
           <h2 style="font-size:22px;font-weight:700;letter-spacing:-0.02em" id="auth-title">Merchant Login</h2>
           <p style="font-size:13px;color:var(--text-muted);margin-top:4px" id="auth-subtitle">Access your Razorpay reconciliation dashboard</p>
         </div>
@@ -291,9 +298,13 @@
   <div class="copilot-panel" id="copilot-panel">
     <div class="copilot-header">
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="rzp-emblem" style="width:28px;height:28px;font-size:14px">R</div>
+        <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:#3395ff;border-radius:6px;box-shadow:0 2px 8px rgba(51,149,255,0.4)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21.9999 4H16.9999L14.9999 15H11.9999L13.9999 4H1.9999V8H9.2799L6.5499 23H11.5499L12.9999 15H19.9999L21.9999 4Z" fill="white"/>
+          </svg>
+        </div>
         <div>
-          <div style="font-size:14px;font-weight:700">Reconciliation Q&A Agent</div>
+          <div style="font-size:14px;font-weight:700">Razorpay Recon Q&A Agent</div>
           <div style="font-size:10px;color:var(--text-dim)">Strict Financial Data Assistant</div>
         </div>
       </div>
