@@ -101,7 +101,8 @@ TABLE: tuple[Rule, ...] = (
     ("R3", UNRESOLVED, lambda e: e.bank_credit_absent and not e.inside_window),
     ("R4", HUMAN_REVIEW, lambda e: e.match_inferred),
     ("R5", UNRESOLVED, lambda e: abs(e.unexplained) >= MATERIALITY_PAISE),
-    ("R6", HUMAN_REVIEW, lambda e: 0 < abs(e.unexplained) < MATERIALITY_PAISE),
+    ("R6", HUMAN_REVIEW, lambda e: -MATERIALITY_PAISE < e.unexplained < 0),
+    ("R6a", VERIFIED, lambda e: 0 < e.unexplained < MATERIALITY_PAISE),
     ("R7", HUMAN_REVIEW, lambda e: not e.ledger_agrees or e.integrity_defect),
     ("R8", VERIFIED, lambda e: (
         e.keyed and abs(e.gap) <= TOLERANCE_PAISE and e.attributions == 0
