@@ -236,7 +236,7 @@ function renderExceptionTable(decisions) {
 
     const flows = window._currentFlows || [];
     const flow = flows.find(f => f.unit_id === d.unit_id);
-    const decompositions = (window._currentResults || {}).decompositions || [];
+    const decompositions = currentResults?.decompositions || [];
     let decomp = null;
     if (flow?.settlement?.settlement_id) {
       decomp = decompositions.find(dec => dec.settlement_id === flow.settlement.settlement_id);
