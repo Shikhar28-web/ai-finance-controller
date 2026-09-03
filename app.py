@@ -121,8 +121,9 @@ def connect_razorpay():
 
     # Verify connection
     client = RazorpayClient(key_id, key_secret)
-    if not client.verify_connection():
-        return jsonify({"error": "Invalid Razorpay credentials. Make sure you're using Test Mode keys."}), 400
+    success, error_msg = client.verify_connection()
+    if not success:
+        return jsonify({"error": error_msg}), 400
 
     save_razorpay_connection(request.user_id, key_id, key_secret)
     return jsonify({"message": "Razorpay connected successfully", "test_mode": True})
