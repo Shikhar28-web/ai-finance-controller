@@ -344,6 +344,48 @@ function showTransactionDetail(unitId) {
       </div>
     </div>` : ''}
 
+    ${(() => {
+      if (!flow?.payment) return '';
+      const gross = flow.payment.gross_paise;
+      const mdr_bps = 190;
+      const gst_bps = 1800;
+
+      const calcFee = (amt, bps) => {
+        const num = amt * bps;
+        const den = 10000;
+        if (num >= 0) return Math.floor((num * 2 + den) / (den * 2));
+        return -Math.floor((-num * 2 + den) / (den * 2));
+      };
+
+      const mdr_paise = calcFee(gross, mdr_bps);
+      const gst_paise = calcFee(mdr_paise, gst_bps);
+      const net_paise = gross - mdr_paise - gst_paise;
+
+      return `
+      <div style="margin-top:16px">
+        <h4 style="font-size:14px;margin-bottom:8px">Tax & Fee Segregation (Contracted Rates)</h4>
+        <div class="card" style="padding:12px;display:flex;flex-direction:column;gap:8px;font-size:13px;background:var(--bg-input)">
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Gross Payment:</span>
+            <span class="mono" style="font-weight:600">${paise(gross)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">MDR Fee (1.90%):</span>
+            <span class="mono" style="color:var(--unresolved)">${paise(-mdr_paise)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">GST on Fee (18.00%):</span>
+            <span class="mono" style="color:var(--unresolved)">${paise(-gst_paise)}</span>
+          </div>
+          <div style="height:1px;background:var(--border-subtle);margin:4px 0"></div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-weight:600">Expected Net Bank Credit:</span>
+            <span class="mono" style="font-weight:700;color:var(--verified)">${paise(net_paise)}</span>
+          </div>
+        </div>
+      </div>`;
+    })()}
+
     ${decompHtml}
 
     <div style="margin-top:16px">
