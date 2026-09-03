@@ -361,10 +361,11 @@ function showTransactionDetail(unitId) {
         textClass = 'var(--unresolved)';
       }
       
+      const displayName = name.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
       return `
-        <div style="display:flex;align-items:center;gap:6px;background:${colorClass};padding:6px 12px;border-radius:16px;border:1px solid ${textClass};font-size:12px;font-weight:700;color:${textClass}">
+        <div style="display:flex;align-items:center;gap:4px;background:${colorClass};padding:4px 8px;border-radius:12px;border:1px solid ${textClass};font-size:11px;font-weight:700;color:${textClass}">
           ${icon}
-          ${name.replace(/_/g, ' ')}
+          ${displayName}
         </div>
       `;
     }).join('')
