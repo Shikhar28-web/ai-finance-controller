@@ -2,7 +2,7 @@
    Transaction Money Trail Flow Visualization
    ================================================================ */
 
-function renderTransactionFlow(flow, containerId) {
+function renderTransactionFlow(flow, decomp, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -66,8 +66,8 @@ function renderTransactionFlow(flow, containerId) {
         </div>
         <div class="flow-details">
           <div class="flow-title">Settlement</div>
-          <div class="flow-amount">${settlement ? settlement.settlement_id : 'Missing'}</div>
-          <div class="flow-sub mono" title="${settlement?.utr || ''}">${settlement ? (settlement.utr || 'No UTR') : '—'}</div>
+          <div class="flow-amount">${settlementOk && decomp ? paise(decomp.expected_paise) : 'Missing'}</div>
+          <div class="flow-sub mono" title="${settlement?.utr || ''}">${settlement ? settlement.settlement_id : '—'}</div>
         </div>
       </div>
 
@@ -76,12 +76,12 @@ function renderTransactionFlow(flow, containerId) {
       <!-- Bank Node -->
       <div class="flow-node">
         <div class="flow-icon ${bankStatus}">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="21"></line></svg>
         </div>
         <div class="flow-details">
           <div class="flow-title">Bank Credit</div>
-          <div class="flow-amount">${bankStatus === 'missing' ? 'Pending' : paise(payment.gross_paise)}</div>
-          <div class="flow-sub mono">${settlement?.due_on ? `Due: ${settlement.due_on}` : '—'}</div>
+          <div class="flow-amount">${bankStatus === 'missing' ? 'Pending' : (decomp?.actual_paise != null ? paise(decomp.actual_paise) : '—')}</div>
+          <div class="flow-sub mono">${settlement?.utr ? settlement.utr : (settlement?.due_on ? `Due: ${settlement.due_on}` : '—')}</div>
         </div>
       </div>
 
@@ -115,10 +115,15 @@ function renderTransactionFlow(flow, containerId) {
 function renderFlowForTransaction(unitId) {
   const flows = window._currentFlows || [];
   const flow = flows.find(f => f.unit_id === unitId);
+  const decompositions = (window._currentResults || currentResults)?.decompositions || [];
+  let decomp = null;
+  if (flow?.settlement?.settlement_id) {
+    decomp = decompositions.find(d => d.settlement_id === flow.settlement.settlement_id);
+  }
 
   document.getElementById('flow-empty').style.display = 'none';
   document.getElementById('flow-content').style.display = 'block';
   document.getElementById('flow-title').textContent = `Flow for ${unitId}`;
 
-  renderTransactionFlow(flow, 'flow-content');
+  renderTransactionFlow(flow, decomp, 'flow-content');
 }
