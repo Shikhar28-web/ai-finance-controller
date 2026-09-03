@@ -175,11 +175,7 @@ function renderDashboard(data) {
   // ---- Exception Table ----
   renderExceptionTable(decisions);
 
-  // ---- Run Info ----
-  const runMeta = data.metrics?.run_meta || {};
-  document.getElementById('run-info').textContent =
-    `Run: ${data.run_at || 'just now'} · ${runMeta.wall_clock_seconds || results.wall_clock_seconds || '?'}s · ` +
-    `${runMeta.mode || metrics.split || 'unknown'} mode`;
+
 }
 
 function renderExceptionTable(decisions) {
