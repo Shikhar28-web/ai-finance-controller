@@ -5,46 +5,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Razorpay Brand & Tech Palette */
-  --bg-main: #060913;
-  --bg-nav: rgba(10, 15, 29, 0.92);
-  --bg-card: #0f172a;
-  --bg-card-hover: #1e293b;
-  --bg-input: #0b1120;
-  --bg-secondary: #0b1120;
+  /* Clean Enterprise Light Palette */
+  --bg-main: #f8fafc;
+  --bg-nav: rgba(255, 255, 255, 0.95);
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-input: #f8fafc;
+  --bg-secondary: #f1f5f9;
 
   --rzp-blue: #3395ff;
   --rzp-blue-hover: #257ce6;
-  --rzp-blue-bg: rgba(51, 149, 255, 0.12);
+  --rzp-blue-bg: rgba(51, 149, 255, 0.1);
   --rzp-navy: #02042b;
 
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
 
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #94a3b8;
+  --text-accent: #334155;
 
   /* State Tokens */
-  --verified: #10b981;
-  --verified-bg: rgba(16, 185, 129, 0.12);
-  --explained: #38bdf8;
-  --explained-bg: rgba(56, 189, 248, 0.12);
-  --awaiting: #f59e0b;
-  --awaiting-bg: rgba(245, 158, 11, 0.12);
-  --human-review: #fb923c;
-  --human-review-bg: rgba(251, 146, 60, 0.12);
-  --unresolved: #f43f5e;
-  --unresolved-bg: rgba(244, 63, 94, 0.12);
+  --verified: #059669;
+  --verified-bg: rgba(5, 150, 105, 0.1);
+  --explained: #0284c7;
+  --explained-bg: rgba(2, 132, 199, 0.1);
+  --awaiting: #d97706;
+  --awaiting-bg: rgba(217, 119, 6, 0.1);
+  --human-review: #ea580c;
+  --human-review-bg: rgba(234, 88, 12, 0.1);
+  --unresolved: #e11d48;
+  --unresolved-bg: rgba(225, 29, 72, 0.1);
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-  --shadow-glow: 0 0 20px rgba(51, 149, 255, 0.15);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 20px rgba(51, 149, 255, 0.25);
 }
 
 *, *::before, *::after {
@@ -71,8 +72,8 @@ body::before {
   position: fixed;
   inset: 0;
   background-image: 
-    linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+    linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
   z-index: 0;
@@ -197,14 +198,14 @@ body::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(51, 149, 255, 0.4), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .card:hover {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(51, 149, 255, 0.3);
   box-shadow: var(--shadow-md), var(--shadow-glow);
   transform: translateY(-2px);
 }
@@ -708,8 +709,8 @@ body::before {
   flex: 1;
   padding: 12px 16px;
   border-radius: 24px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-main);
   color: var(--text-main);
   font-size: 13px;
   transition: all 0.2s ease;
@@ -776,7 +777,7 @@ body::before {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(4px);
   z-index: 400;
   display: flex;
@@ -798,7 +799,7 @@ body::before {
   width: 95%;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
 }
 
 /* Spinner */

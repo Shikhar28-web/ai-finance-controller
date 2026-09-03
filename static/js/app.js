@@ -290,7 +290,7 @@ function showTransactionDetail(unitId) {
         <h4 style="font-size:14px;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:8px">
           <span>🔍</span> Gap Analysis
         </h4>
-        <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;font-size:13px;background:rgba(255,255,255,0.02)">
+        <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;font-size:13px;background:var(--bg-input)">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <span style="color:var(--text-muted)">Expected (Contracted):</span>
             <span class="mono" style="font-weight:600">${paise(decomp.expected_paise)}</span>
@@ -314,7 +314,7 @@ function showTransactionDetail(unitId) {
           <div style="margin-top:20px">
             <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600">Attributed Causes</div>
             ${decomp.attributed.map(a => `
-              <div style="padding:12px 16px;background:var(--bg-input);border-radius:8px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.05)">
+              <div style="padding:12px 16px;background:var(--bg-input);border-radius:8px;margin-bottom:8px;border:1px solid var(--border-subtle)">
                 <div style="display:flex;justify-content:space-between;margin-bottom:4px">
                   <span style="color:var(--text-main);font-weight:600">${a.cause.replace(/_/g, ' ')}</span>
                   <span class="mono" style="font-weight:700;color:var(--awaiting)">${paise(a.amount_paise)}</span>
@@ -329,8 +329,26 @@ function showTransactionDetail(unitId) {
 
   const checksHtml = decision.confidence?.checks
     ? Object.entries(decision.confidence.checks).map(([name, val]) => {
-      const icon = val === true ? '✅' : val === false ? '❌' : '⚪';
-      return `<span style="font-size:11px;margin-right:8px" title="${name}">${icon} ${name.replace(/_/g, ' ')}</span>`;
+      let icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted)"><circle cx="12" cy="12" r="10"></circle></svg>`;
+      let colorClass = 'var(--bg-input)';
+      let textClass = 'var(--text-muted)';
+      
+      if (val === true) {
+        icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--verified)"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        colorClass = 'var(--verified-bg)';
+        textClass = 'var(--verified)';
+      } else if (val === false) {
+        icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--unresolved)"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        colorClass = 'var(--unresolved-bg)';
+        textClass = 'var(--unresolved)';
+      }
+      
+      return `
+        <div style="display:flex;align-items:center;gap:6px;background:${colorClass};padding:4px 8px;border-radius:12px;font-size:11px;font-weight:600;color:${textClass}">
+          ${icon}
+          ${name.replace(/_/g, ' ')}
+        </div>
+      `;
     }).join('')
     : '';
 
@@ -358,7 +376,7 @@ function showTransactionDetail(unitId) {
       <div style="display:flex;flex-direction:column;gap:20px">
         ${flow?.payment ? `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div class="card" style="padding:16px;background:rgba(255,255,255,0.02)">
+          <div class="card" style="padding:16px;background:var(--bg-input)">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
               <span style="font-size:16px">💳</span><span class="card-title" style="margin:0">Payment Node</span>
             </div>
@@ -366,7 +384,7 @@ function showTransactionDetail(unitId) {
             <div style="font-size:24px;font-weight:800;color:var(--text-main)" class="num">${paise(flow.payment.gross_paise)}</div>
             <div style="font-size:11px;color:var(--text-dim);margin-top:4px">${flow.payment.captured_on}</div>
           </div>
-          <div class="card" style="padding:16px;background:rgba(255,255,255,0.02)">
+          <div class="card" style="padding:16px;background:var(--bg-input)">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
               <span style="font-size:16px">📋</span><span class="card-title" style="margin:0">Settlement Node</span>
             </div>
@@ -395,7 +413,7 @@ function showTransactionDetail(unitId) {
             <h4 style="font-size:14px;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:8px">
               <span>⚖️</span> Tax & Fee Segregation (Contracted)
             </h4>
-            <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;font-size:13px;background:rgba(255,255,255,0.02)">
+            <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;font-size:13px;background:var(--bg-input)">
               <div style="display:flex;justify-content:space-between;align-items:center">
                 <span style="color:var(--text-muted)">Gross Payment:</span>
                 <span class="mono" style="font-weight:600;font-size:14px">${paise(gross)}</span>
