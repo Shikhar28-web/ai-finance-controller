@@ -18,13 +18,19 @@ class RazorpayClient:
         self.client = razorpay.Client(auth=(key_id, key_secret))
         self.key_id = key_id
 
-    def verify_connection(self) -> bool:
+    def verify_connection(self) -> tuple[bool, str]:
         """Test that the API keys are valid."""
         try:
+            # We use a simple request to check auth
             self.client.payment.all({"count": 1})
-            return True
-        except Exception:
-            return False
+            return True, "Connected successfully"
+        except razorpay.errors.BadRequestError:
+            return False, "Invalid API Keys. Ensure you are using Test Mode keys."
+        except Exception as e:
+            error_str = str(e).lower()
+            if "max retries exceeded" in error_str or "timeout" in error_str or "connection" in error_str:
+                return False, "Network Error: Could not connect to Razorpay. Check your internet connection."
+            return False, f"Connection failed: {str(e)}"
 
     def fetch_payments(self, count: int = 100, skip: int = 0) -> list[dict]:
         """Fetch payments from Razorpay API."""
