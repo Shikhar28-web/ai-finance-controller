@@ -5,47 +5,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Clean Enterprise Light Palette */
-  --bg-main: #f8fafc;
-  --bg-nav: rgba(255, 255, 255, 0.95);
-  --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
-  --bg-input: #f8fafc;
-  --bg-secondary: #f1f5f9;
+  /* Premium Dark Theme */
+  --bg-main: #0B0F19;
+  --bg-nav: rgba(11, 15, 25, 0.85);
+  --bg-card: #151B2B;
+  --bg-card-hover: #1C2438;
+  --bg-input: #0F1423;
+  --bg-secondary: #0F1423;
 
   --rzp-blue: #3395ff;
   --rzp-blue-hover: #257ce6;
-  --rzp-blue-bg: rgba(51, 149, 255, 0.1);
+  --rzp-blue-bg: rgba(51, 149, 255, 0.15);
   --rzp-navy: #02042b;
 
-  --border-subtle: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-strong: rgba(255, 255, 255, 0.1);
 
-  --text-main: #0f172a;
-  --text-muted: #475569;
-  --text-dim: #94a3b8;
-  --text-accent: #334155;
+  --text-main: #FFFFFF;
+  --text-muted: #8B9BB4;
+  --text-dim: #6B7B94;
+  --text-accent: #A3B5D1;
 
   /* State Tokens */
-  --verified: #059669;
-  --verified-bg: rgba(5, 150, 105, 0.1);
-  --explained: #0284c7;
-  --explained-bg: rgba(2, 132, 199, 0.1);
-  --awaiting: #d97706;
-  --awaiting-bg: rgba(217, 119, 6, 0.1);
-  --human-review: #ea580c;
-  --human-review-bg: rgba(234, 88, 12, 0.1);
-  --unresolved: #e11d48;
-  --unresolved-bg: rgba(225, 29, 72, 0.1);
+  --verified: #10B981;
+  --verified-bg: rgba(16, 185, 129, 0.15);
+  --explained: #38BDF8;
+  --explained-bg: rgba(56, 189, 248, 0.15);
+  --awaiting: #F59E0B;
+  --awaiting-bg: rgba(245, 158, 11, 0.15);
+  --human-review: #F97316;
+  --human-review-bg: rgba(249, 115, 22, 0.15);
+  --unresolved: #F43F5E;
+  --unresolved-bg: rgba(244, 63, 94, 0.15);
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 20px rgba(51, 149, 255, 0.25);
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 30px rgba(51, 149, 255, 0.1);
 }
 
 *, *::before, *::after {
@@ -72,8 +72,8 @@ body::before {
   position: fixed;
   inset: 0;
   background-image: 
-    linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
   z-index: 0;
@@ -198,14 +198,14 @@ body::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(51, 149, 255, 0.4), transparent);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .card:hover {
-  border-color: rgba(51, 149, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
   box-shadow: var(--shadow-md), var(--shadow-glow);
   transform: translateY(-2px);
 }
@@ -777,7 +777,7 @@ body::before {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(4px);
   z-index: 400;
   display: flex;
@@ -799,7 +799,7 @@ body::before {
   width: 95%;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.8);
 }
 
 /* Spinner */

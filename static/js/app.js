@@ -234,17 +234,35 @@ function renderExceptionTable(decisions) {
       human_review_queue: '🔴 Human',
     }[d.routing] || d.routing;
 
+    const flows = window._currentFlows || [];
+    const flow = flows.find(f => f.unit_id === d.unit_id);
+    const decompositions = (window._currentResults || {}).decompositions || [];
+    let decomp = null;
+    if (flow?.settlement?.settlement_id) {
+      decomp = decompositions.find(dec => dec.settlement_id === flow.settlement.settlement_id);
+    }
+
+    const paise = (p) => {
+      if (p == null) return '—';
+      const sign = p < 0 ? '−' : '';
+      const abs = Math.abs(p / 100);
+      return `${sign}₹${abs.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    const grossAmount = flow?.payment?.gross_paise != null ? paise(flow.payment.gross_paise) : '—';
+    const bankCredit = decomp?.actual_paise != null ? paise(decomp.actual_paise) : '—';
+    const gap = decomp?.unexplained_paise != null ? paise(decomp.unexplained_paise) : '—';
+    
+    const gapColor = decomp?.unexplained_paise !== 0 && decomp?.unexplained_paise != null ? 'var(--unresolved)' : 'var(--verified)';
+
     return `
       <tr onclick="showTransactionDetail('${d.unit_id}')">
         <td class="mono" style="font-size:12px;color:var(--text-accent)">${d.unit_id}</td>
-        <td>${d.unit_kind || 'payment'}</td>
+        <td class="num" style="font-weight:600;font-size:13px">${grossAmount}</td>
+        <td class="num" style="font-size:13px">${bankCredit}</td>
+        <td class="num" style="color:${gapColor};font-weight:600;font-size:13px">${gap}</td>
         <td><span class="badge ${badgeClass}">${d.state}</span></td>
         <td class="mono" style="font-size:12px">${d.rule}</td>
-        <td>
-          <span class="mono" style="color:${confColor};font-size:12px;font-weight:600">${conf.toFixed(3)}</span>
-          <span style="font-size:10px;color:var(--text-muted);margin-left:4px">(${d.confidence?.passed || 0}/${d.confidence?.applicable || 0})</span>
-        </td>
-        <td style="font-size:12px">${routingLabel}</td>
         <td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();showTransactionDetail('${d.unit_id}')">View</button></td>
       </tr>`;
   }).join('');
