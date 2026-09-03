@@ -291,43 +291,49 @@
       </div>
     </div>
   </div>
-
-  <!-- ============================================================ RECON QA AGENT COPILOT SIDEBAR -->
-  <button class="copilot-toggle" id="copilot-toggle" onclick="toggleCopilot()" title="Reconciliation Q&A Agent">🤖</button>
-  <div class="overlay" id="copilot-overlay" onclick="toggleCopilot()"></div>
-  <div class="copilot-panel" id="copilot-panel">
-    <div class="copilot-header">
+  <!-- ============================================================ RECON QA AGENT COPILOT CHAT WIDGET -->
+  <div class="chat-widget" id="copilot-panel">
+    <div class="chat-header">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:#3395ff;border-radius:6px;box-shadow:0 2px 8px rgba(51,149,255,0.4)">
+        <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:#ffffff;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21.9999 4H16.9999L14.9999 15H11.9999L13.9999 4H1.9999V8H9.2799L6.5499 23H11.5499L12.9999 15H19.9999L21.9999 4Z" fill="white"/>
+            <path d="M21.9999 4H16.9999L14.9999 15H11.9999L13.9999 4H1.9999V8H9.2799L6.5499 23H11.5499L12.9999 15H19.9999L21.9999 4Z" fill="#3395ff"/>
           </svg>
         </div>
         <div>
-          <div style="font-size:14px;font-weight:700">Razorpay Recon Q&A Agent</div>
-          <div style="font-size:10px;color:var(--text-dim)">Strict Financial Data Assistant</div>
+          <div style="font-size:14px;font-weight:700;color:white">Razorpay Q&A Agent</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.7)">Strict Financial Data Assistant</div>
         </div>
       </div>
-      <button style="background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer" onclick="toggleCopilot()">✕</button>
+      <button style="background:none;border:none;color:#ffffff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;width:24px;height:24px" onclick="toggleCopilot()">✕</button>
     </div>
-    <div class="copilot-messages" id="copilot-messages">
-      <div class="copilot-msg bot">
+    <div class="chat-messages" id="copilot-messages">
+      <div class="chat-msg bot">
         👋 **Hello! I am your Reconciliation Q&A Agent.**
-        
-I am strictly bound to your reconciliation engine's outputs and financial calculations.
-
-Ask me anything about:
-• **Total Amounts & Paid Volume** (*"How much amount has been processed/paid?"*)
-• **Tax & MDR Fee Segregation** (*"Explain the MDR fee and GST breakdown"*)
-• **Human Review & Unresolved Queues** (*"Show me all unresolved items"*)
-• **Attributed Gap Causes** (*"Which settlements have fee drift?"*)
+        <br><br>
+        I am strictly bound to your reconciliation engine's outputs and financial calculations.
+        <br><br>
+        Ask me anything about:<br>
+        • Total Amounts & Paid Volume<br>
+        • Tax & MDR Fee Segregation<br>
+        • Human Review & Unresolved Queues<br>
+        • Attributed Gap Causes
       </div>
     </div>
-    <div class="copilot-input-area">
-      <input class="copilot-input" type="text" id="copilot-input" placeholder="Ask about payments, amounts, taxes..." onkeydown="if(event.key==='Enter')sendCopilotMessage()">
-      <button class="copilot-send" onclick="sendCopilotMessage()">➤</button>
+    <div class="chat-input-area">
+      <input class="chat-input" type="text" id="copilot-input" placeholder="Ask about payments, amounts, taxes..." onkeydown="if(event.key==='Enter')sendCopilotMessage()">
+      <button class="chat-send" onclick="sendCopilotMessage()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="white"/></svg>
+      </button>
     </div>
   </div>
+
+  <button class="chat-fab" id="copilot-toggle" onclick="toggleCopilot()" title="Reconciliation Q&A Agent">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="white"/>
+      <path d="M7 9H9V11H7V9ZM11 9H13V11H11V9ZM15 9H17V11H15V9Z" fill="white"/>
+    </svg>
+  </button>
 
   <!-- Detail Modal -->
   <div class="modal-backdrop" id="txn-modal">

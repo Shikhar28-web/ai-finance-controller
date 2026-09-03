@@ -554,13 +554,13 @@ async function sendCopilotMessage() {
   if (!question) return;
 
   const messages = document.getElementById('copilot-messages');
-  messages.innerHTML += `<div class="copilot-msg user">${escapeHtml(question)}</div>`;
+  messages.innerHTML += `<div class="chat-msg user">${escapeHtml(question)}</div>`;
   input.value = '';
   messages.scrollTop = messages.scrollHeight;
 
   // Show typing indicator
   const typingId = 'typing-' + Date.now();
-  messages.innerHTML += `<div class="copilot-msg bot" id="${typingId}"><div class="spinner" style="width:16px;height:16px"></div></div>`;
+  messages.innerHTML += `<div class="chat-msg bot" id="${typingId}"><div class="spinner" style="width:16px;height:16px"></div></div>`;
   messages.scrollTop = messages.scrollHeight;
 
   try {
@@ -568,9 +568,11 @@ async function sendCopilotMessage() {
       method: 'POST',
       body: { question },
     });
-    document.getElementById(typingId).innerHTML = formatCopilotResponse(res.answer);
+    document.getElementById(typingId).remove();
+    messages.innerHTML += `<div class="chat-msg bot">${formatCopilotResponse(res.answer)}</div>`;
   } catch (err) {
-    document.getElementById(typingId).innerHTML = `❌ ${err.message || 'Failed to get response'}`;
+    document.getElementById(typingId).remove();
+    messages.innerHTML += `<div class="chat-msg bot" style="color:var(--unresolved)">❌ ${err.message || 'Failed to get response'}</div>`;
   }
   messages.scrollTop = messages.scrollHeight;
 }
