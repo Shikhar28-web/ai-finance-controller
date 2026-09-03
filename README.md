@@ -44,14 +44,16 @@ unresolved, ₹0 wrongly auto-reconciled.
 
 ---
 
-## Viewing the results
+## Viewing the results (Razorpay Buildathon Demo)
 
 ```bash
-open docs/index.html
+python3 app.py
 ```
 
-A single static page reading `metrics_summary.json`. No server, no build step; it
-computes nothing and says so when the JSON is missing.
+This launches the local Flask server at `http://127.0.0.1:5000`. 
+The dashboard features a **Dark Mode UI**, an **AI Copilot** for querying transactions, and an interactive **Transaction Flow Diagram**. 
+* **Live Mode:** Connects to Razorpay via API keys to pull live settlement data.
+* **Stress-Test Mode:** Because financial data is highly confidential, this app includes a deterministic, mathematically perfect **Simulation Engine** that generates 500 complex test records locally (calculating exact 18% GST and 1.9% MDR, injecting UTR faults) to stress-test the reconciliation AI at scale even when offline.
 
 ---
 
@@ -93,9 +95,14 @@ test suite; the pipeline itself needs neither, and runs with no LLM and no API k
 
 ## Status
 
-Steps 1–6 of the §10 priority list, which is the minimum shippable demo. Steps 7–10
-(dashboard, truth graph, Razorpay adapter, copilot) are not built. Step 9 was cut
-explicitly: no test-mode credentials, and it sits below the protected line.
+**Completed for the Razorpay Buildathon!**
+
+We have successfully built the entire end-to-end architecture:
+1. **The Core Engine**: Deterministic rules-based recon engine executing across 5 strict levels.
+2. **The Dashboard**: A premium, dynamic Dark Theme UI with rich gap analysis and strict verification check displays.
+3. **Razorpay Live Adapter**: Connects directly to `api.razorpay.com` via test keys, handling network resilience.
+4. **AI Copilot**: An integrated Q&A agent that reads the exact mathematical output of the recon engine to explain to operators *why* a specific transaction failed, without inventing fake causes.
+5. **Simulation Engine**: A mathematically sound local stress-test engine for offline validation.
 
 ## The one architectural rule
 
