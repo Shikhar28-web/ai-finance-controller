@@ -1,10 +1,8 @@
 """Reconciliation Q&A Agent.
 
-Strict Q&A agent that answers user queries ONLY on the basis of the reconciliation
-agent's outputs (decisions, decompositions, tax segregation, matching report, metrics).
-
-It strictly enforces domain bounding: any question outside the reconciliation agent's
-data and rules receives a clear out-of-scope response.
+Strict, natural-language Q&A agent that answers user queries based on the
+reconciliation pipeline's outputs, money totals, tax calculations, matching
+states, and integrity findings.
 """
 
 from __future__ import annotations
@@ -14,63 +12,114 @@ from afc.money import format_rupees
 
 
 class ReconciliationQAAgent:
-    """Q&A agent bound strictly to the reconciliation pipeline results."""
+    """Q&A agent bound to the reconciliation pipeline results."""
 
     def __init__(self, results: dict | None, metrics: dict | None):
         self.results = results or {}
         self.metrics = metrics or {}
         self.decisions = self.results.get("decisions", [])
         self.decompositions = self.results.get("decompositions", [])
+        self.payment_flows = self.results.get("payment_flows", [])
         self.match_summary = self.results.get("match_summary", {})
         self.integrity = self.results.get("integrity", {})
 
     def answer(self, query: str) -> str:
-        """Answer queries strictly derived from reconciliation agent data."""
+        """Answer queries using data from the reconciliation run."""
         if not self.results:
             return (
-                "⚠️ **No Reconciliation Agent Data Available**\n\n"
-                "I am the Reconciliation Q&A Agent. I can only answer questions after "
-                "the reconciliation agent has completed a run. Please run reconciliation first."
+                "⚠️ **No Reconciliation Data Available**\n\n"
+                "Please run a reconciliation first (using live Razorpay data or demo synthetic data). "
+                "Once completed, I can break down amounts, fees, GST, matches, and exceptions for you!"
             )
 
         q = query.lower().strip()
 
-        # 1. Tax & Fee Segregation Queries
-        if any(kw in q for kw in ["tax", "gst", "mdr", "fee", "segregat", "deductuion", "rate", "drift"]):
+        # 1. Total Amount / Paid / Volume / Financial Totals
+        if any(kw in q for kw in ["paid", "pay", "amount", "total", "volume", "gross", "net", "how much", "receive", "credited", "payout"]):
+            return self._financial_amounts_breakdown(q)
+
+        # 2. Tax & Fee Segregation Queries
+        if any(kw in q for kw in ["tax", "gst", "mdr", "fee", "rate", "drift", "deduct"]):
             return self._tax_segregation_breakdown(q)
 
-        # 2. Reconciliation Decisions & State Queries
-        if any(kw in q for kw in ["verified", "explained", "awaiting", "human review", "unresolved", "state", "status"]):
+        # 3. Reconciliation Decisions & State Queries
+        if any(kw in q for kw in ["verified", "explained", "awaiting", "human review", "unresolved", "state", "status", "queue"]):
             return self._state_breakdown(q)
 
-        # 3. Gap Decomposition Queries
+        # 4. Gap Decomposition Queries
         if any(kw in q for kw in ["gap", "difference", "short", "variance", "attributed", "unexplained"]):
             return self._decomposition_breakdown(q)
 
-        # 4. Integrity & Duplicate Findings
+        # 5. Integrity & Duplicate Findings
         if any(kw in q for kw in ["duplicate", "integrity", "defect", "orphan", "utr"]):
             return self._integrity_breakdown(q)
 
-        # 5. Pipeline Accuracy & Performance Metrics
+        # 6. Pipeline Accuracy & Performance Metrics
         if any(kw in q for kw in ["accuracy", "coverage", "metric", "confidence", "speed", "throughput"]):
             return self._metrics_breakdown(q)
 
-        # 6. Overall Agent Summary
-        if any(kw in q for kw in ["summary", "overview", "report", "all", "what did you find"]):
+        # 7. Overall Summary
+        if any(kw in q for kw in ["summary", "overview", "report", "all", "what did you find", "help"]):
             return self._reconciliation_summary()
 
-        # Fallback for out-of-bounds queries
-        return (
-            "🔒 **Strict Reconciliation Boundary Notice**\n\n"
-            "As the dedicated Reconciliation Q&A Agent, I answer **exclusively** on the basis "
-            "of the reconciliation agent's findings (Tax/Fee Segregation, Matching States, "
-            "Gaps, Integrity Defects, and Confidence Metrics).\n\n"
-            "Try asking me:\n"
-            "• *\"Explain the tax and GST segregation breakdown\"*\n"
-            "• *\"Why were transactions placed in HUMAN_REVIEW?\"*\n"
-            "• *\"How is fee_rate_drift calculated for gaps?\"*\n"
-            "• *\"What duplicate bank credits or ledger entries were flagged?\"*"
+        # Catch-all: default to financial breakdown + summary if money is asked or general query
+        return self._financial_amounts_breakdown(q)
+
+    def _financial_amounts_breakdown(self, q: str) -> str:
+        """Aggregates and formats all monetary amounts from payment flows and decompositions."""
+        total_gross_paise = 0
+        total_ledger_paise = 0
+        payments_count = 0
+
+        for f in self.payment_flows:
+            p = f.get("payment")
+            if p:
+                total_gross_paise += p.get("gross_paise", 0)
+                payments_count += 1
+            l = f.get("ledger")
+            if l:
+                total_ledger_paise += l.get("amount_paise", 0)
+
+        # Calculate MDR (1.90%) and GST (18% of MDR = 0.342%)
+        total_mdr_paise = int(total_gross_paise * 0.019)
+        total_gst_paise = int(total_mdr_paise * 0.18)
+        total_fees_paise = total_mdr_paise + total_gst_paise
+        estimated_net_paise = total_gross_paise - total_fees_paise
+
+        # Actual bank credits across decompositions
+        actual_bank_paise = sum(
+            d.get("actual_paise", 0) or 0 for d in self.decompositions
         )
+
+        m = self.metrics.get("metrics", self.metrics)
+        rupees = m.get("rupees", {})
+
+        auto_rec = rupees.get("auto_reconciled_correct", 0)
+        review_amt = rupees.get("sent_to_human_review", 0)
+        unres_amt = rupees.get("unresolved", 0)
+
+        lines = [
+            "💰 **Financial & Transaction Volume Summary**\n",
+            f"• **Total Payments Processed**: **{payments_count}** transactions",
+            f"• **Total Gross Volume**: **{format_rupees(total_gross_paise)}**",
+            f"• **Est. MDR Fees (1.90%)**: **{format_rupees(total_mdr_paise)}**",
+            f"• **Est. GST on MDR (18%)**: **{format_rupees(total_gst_paise)}**",
+            f"• **Total Fee & Tax Deductions**: **{format_rupees(total_fees_paise)}**",
+            f"• **Net Expected Payout**: **{format_rupees(estimated_net_paise)}**\n",
+        ]
+
+        if actual_bank_paise > 0:
+            lines.append(f"🏦 **Actual Bank Credits Received**: **{format_rupees(actual_bank_paise)}**")
+
+        if auto_rec or review_amt or unres_amt:
+            lines.extend([
+                "\n📌 **Money Breakdown by Reconciliation Status:**",
+                f"• ✅ **Auto-Reconciled Value**: **{format_rupees(auto_rec)}**",
+                f"• 👤 **Sent to Human Review Queue**: **{format_rupees(review_amt)}**",
+                f"• ❌ **Unresolved Gap Value**: **{format_rupees(unres_amt)}**",
+            ])
+
+        return "\n".join(lines)
 
     def _tax_segregation_breakdown(self, q: str) -> str:
         """Detailed breakdown of Tax & MDR Fee segregation from the recon run."""
@@ -85,7 +134,7 @@ class ReconciliationQAAgent:
 
         lines = [
             "🧾 **Tax & MDR Fee Segregation Report**\n",
-            "**Core Tax & Fee Rules Applied by Reconciliation Agent:**",
+            "**Core Tax & Fee Rules Applied by Reconciliation Engine:**",
             "1. **MDR Fee (Merchant Discount Rate)**: Calculated per payment as `round_half_away_from_zero(Gross * MDR_BPS / 10000)`.",
             f"   • Contracted MDR: **{contracted_mdr_bps/100:.2f}%** ({contracted_mdr_bps} BPS)",
             "2. **GST on Fee**: Applied **strictly on the MDR fee**, NOT on the gross transaction amount.",
@@ -116,7 +165,7 @@ class ReconciliationQAAgent:
         states = ["VERIFIED", "EXPLAINED", "AWAITING_BANK", "HUMAN_REVIEW", "UNRESOLVED"]
         for s in states:
             c = counts.get(s, 0)
-            lines.append(f"• **{s}**: {c} units")
+            lines.append(f"• **{s}**: **{c}** units")
 
         return "\n".join(lines)
 
@@ -168,9 +217,9 @@ class ReconciliationQAAgent:
         total = len(self.decisions)
         return (
             f"🤖 **Reconciliation Agent Work Summary**\n\n"
-            f"• **Total Units Processed**: {total}\n"
+            f"• **Total Units Processed**: **{total}**\n"
             f"• **Tax & MDR Rules**: Contracted 1.90% MDR + 18% GST on Fee applied in integer paise.\n"
             f"• **Integrity Findings**: {self.integrity.get('bank_duplicate_groups', 0)} Bank duplicates, {self.integrity.get('ledger_duplicate_groups', 0)} Ledger duplicates.\n"
             f"• **Decompositions Evaluated**: {len(self.decompositions)} settlements analyzed for gap causes.\n\n"
-            "Ask me any specific question regarding taxes, MDR drift, decisions, or gap breakdowns!"
+            "Ask me any question regarding your total volume, MDR fees, GST, decisions, or settlement gaps!"
         )
