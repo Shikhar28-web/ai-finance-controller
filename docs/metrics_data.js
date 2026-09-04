@@ -227,9 +227,9 @@ window.AFC_METRICS = {
     "ai_generated": true
   },
   "run_meta": {
-    "wall_clock_seconds": 0.0223,
-    "records_per_second": 23254.1,
-    "git_sha": "7886be2",
-    "generated_at_unix": 1788340396
+    "wall_clock_seconds": 0.0184,
+    "records_per_second": 28172.9,
+    "git_sha": "unknown",
+    "generated_at_unix": 1788461834
   }
 };

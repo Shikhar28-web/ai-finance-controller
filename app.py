@@ -564,8 +564,9 @@ def _build_synthetic_metrics(result, ds, batch, wall_clock: float) -> dict:
 
 
 if __name__ == "__main__":
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else int(os.environ.get("PORT", 5000))
     print("\n  ╔═══════════════════════════════════════════════╗")
-    print("  ║   AI Finance Controller — Web Dashboard       ║")
-    print("  ║   http://localhost:5000                        ║")
-    print("  ╚═══════════════════════════════════════════════╝\n")
-    app.run(debug=True, port=5000)
+    print(f"   ║   AI Finance Controller — Web Dashboard       ║")
+    print(f"   ║   http://localhost:{port:<27}                 ║")
+    print("    ╚═══════════════════════════════════════════════╝\n")
+    app.run(host="0.0.0.0", debug=True, port=port)

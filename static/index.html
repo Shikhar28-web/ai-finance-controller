@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Razorpay Merchant Reconciliation Engine — Finance Operations Portal</title>
   <meta name="description" content="Enterprise Razorpay Payment & Settlement Reconciliation Controller. Reconcile Payments, Settlements, Bank Credits, and Ledger Entries in Real-Time.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect rx='18' width='100' height='100' fill='%234F8EFF'/><text x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' font-size='60' fill='white' font-weight='bold'>₹</text></svg>">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
@@ -16,14 +17,14 @@
     <div class="navbar-inner">
       <div class="brand-wrapper">
         <a href="#" style="text-decoration:none;display:flex;align-items:center;gap:14px" onclick="navigate('dashboard')">
-          <div style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;background:#3395ff;border-radius:10px;box-shadow:0 4px 14px rgba(51,149,255,0.4)">
+          <div style="display:flex;align-items:center;justify-content:center;width:42px;height:42px;background:linear-gradient(135deg,#4F8EFF 0%,#7C5CFC 100%);border-radius:12px;box-shadow:0 4px 18px rgba(79,142,255,0.35)">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21.9999 4H16.9999L14.9999 15H11.9999L13.9999 4H1.9999V8H9.2799L6.5499 23H11.5499L12.9999 15H19.9999L21.9999 4Z" fill="white"/>
             </svg>
           </div>
           <div>
             <div style="font-size:18px;font-weight:800;color:var(--text-main);letter-spacing:-0.03em;line-height:1.2">Razorpay</div>
-            <div style="font-size:13px;color:var(--text-muted);font-weight:500">Finance Controller</div>
+            <div style="font-size:12px;color:var(--text-dim);font-weight:500;letter-spacing:0.02em">Finance Controller</div>
           </div>
         </a>
       </div>
@@ -35,18 +36,18 @@
 
   <!-- ============================================================ AUTH PAGE -->
   <div id="page-auth" class="page">
-    <div style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);padding:24px">
-      <div class="card" style="width:100%;max-width:400px;padding:36px">
-        <div style="text-align:center;margin-bottom:24px">
-          <div style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;background:#3395ff;border-radius:12px;box-shadow:0 4px 14px rgba(51,149,255,0.4);margin:0 auto 16px">
+    <div style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 68px);padding:24px">
+      <div class="card" style="width:100%;max-width:420px;padding:40px;border:1px solid rgba(79,142,255,0.12)">
+        <div style="text-align:center;margin-bottom:28px;position:relative;z-index:1">
+          <div style="display:flex;align-items:center;justify-content:center;width:52px;height:52px;background:linear-gradient(135deg,#4F8EFF 0%,#7C5CFC 100%);border-radius:16px;box-shadow:0 6px 24px rgba(79,142,255,0.35);margin:0 auto 18px">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21.9999 4H16.9999L14.9999 15H11.9999L13.9999 4H1.9999V8H9.2799L6.5499 23H11.5499L12.9999 15H19.9999L21.9999 4Z" fill="white"/>
             </svg>
           </div>
-          <h2 style="font-size:22px;font-weight:700;letter-spacing:-0.02em" id="auth-title">Merchant Login</h2>
-          <p style="font-size:13px;color:var(--text-muted);margin-top:4px" id="auth-subtitle">Access your Razorpay reconciliation dashboard</p>
+          <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.03em" id="auth-title">Merchant Login</h2>
+          <p style="font-size:13px;color:var(--text-dim);margin-top:6px;line-height:1.6" id="auth-subtitle">Access your Razorpay reconciliation dashboard</p>
         </div>
-        <form id="auth-form" onsubmit="handleAuth(event)">
+        <form id="auth-form" onsubmit="handleAuth(event)" style="position:relative;z-index:1">
           <div class="form-group">
             <label class="form-label" for="auth-email">Merchant Email</label>
             <input class="form-input" type="email" id="auth-email" placeholder="finance@merchant.com" required>
@@ -55,11 +56,11 @@
             <label class="form-label" for="auth-password">Password</label>
             <input class="form-input" type="password" id="auth-password" placeholder="••••••••" required minlength="4">
           </div>
-          <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:8px" id="auth-submit">
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:12px" id="auth-submit">
             Sign In
           </button>
         </form>
-        <div style="text-align:center;margin-top:20px;font-size:13px;color:var(--text-muted)" id="auth-footer">
+        <div style="text-align:center;margin-top:24px;font-size:13px;color:var(--text-dim);position:relative;z-index:1" id="auth-footer">
           Don't have a merchant account? <a href="#" onclick="toggleAuthMode()" style="color:var(--rzp-blue);text-decoration:none;font-weight:600">Register now</a>
         </div>
       </div>
@@ -71,15 +72,15 @@
     <div class="main-content">
 
       <!-- Empty State -->
-      <div id="dashboard-empty" class="card" style="text-align:center;padding:60px 24px;display:none">
-        <div style="font-size:42px;margin-bottom:12px;opacity:0.6">⚡</div>
-        <h3 style="font-size:18px;font-weight:700;margin-bottom:6px">No Active Reconciliation Batch</h3>
-        <p style="font-size:13px;color:var(--text-muted);max-width:440px;margin:0 auto">
+      <div id="dashboard-empty" class="card" style="text-align:center;padding:72px 24px;display:none">
+        <div style="font-size:48px;margin-bottom:16px;opacity:0.5">⚡</div>
+        <h3 style="font-size:20px;font-weight:800;margin-bottom:8px;letter-spacing:-0.02em;position:relative;z-index:1">No Active Reconciliation Batch</h3>
+        <p style="font-size:14px;color:var(--text-dim);max-width:460px;margin:0 auto;line-height:1.7;position:relative;z-index:1">
           Connect your Razorpay account API keys and upload your bank statement CSV to run a live reconciliation.
         </p>
-        <div style="margin-top:24px;display:flex;gap:12px;justify-content:center">
-          <button class="btn btn-primary" onclick="runReconciliation('live')">🚀 Execute Live Reconciliation</button>
-          <button class="btn btn-secondary" onclick="runReconciliation('demo')">🧪 Run AI-Powered Stress Test (500k Simulated Transactions)</button>
+        <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;position:relative;z-index:1">
+          <button class="btn btn-primary btn-lg" onclick="runReconciliation('live')">🚀 Execute Live Reconciliation</button>
+          <button class="btn btn-secondary btn-lg" onclick="runReconciliation('demo')">🧪 Run AI-Powered Stress Test (500k Simulated Transactions)</button>
         </div>
       </div>
 
@@ -146,12 +147,12 @@
           <div class="card gauge-card">
             <div class="gauge-ring" id="gauge-match-rate"></div>
             <div class="card-title" style="margin-bottom:0">Match Rate</div>
-            <div class="card-subtitle">UTR & narration match</div>
+            <div class="card-subtitle">UTR &amp; narration match</div>
           </div>
           <div class="card gauge-card">
-            <div style="text-align:center;padding:14px 0">
-              <div class="card-value num" id="gauge-throughput" style="color:var(--rzp-blue);font-size:26px">—</div>
-              <div style="font-size:11px;color:var(--text-dim);margin-top:2px">records / sec</div>
+            <div style="text-align:center;padding:14px 0;position:relative;z-index:1">
+              <div class="card-value num" id="gauge-throughput" style="color:var(--rzp-blue);font-size:28px">—</div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:500">records / sec</div>
             </div>
             <div class="card-title" style="margin-bottom:0">Throughput</div>
             <div class="card-subtitle">engine execution speed</div>
@@ -161,11 +162,11 @@
         <!-- Exception Queue Table -->
         <div class="card" style="margin-bottom:24px">
           <div class="section-header">
-            <div>
+            <div style="position:relative;z-index:1">
               <div class="section-title">Reconciliation Exception Queue</div>
-              <div style="font-size:12px;color:var(--text-dim);margin-top:2px">Filtered view of transactions by classification rule and confidence score</div>
+              <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Filtered view of transactions by classification rule and confidence score</div>
             </div>
-            <div id="exception-count" class="mono" style="font-size:12px;color:var(--text-muted)"></div>
+            <div id="exception-count" class="mono" style="font-size:12px;color:var(--text-dim);position:relative;z-index:1"></div>
           </div>
 
           <div class="table-filters" id="table-filters">
@@ -199,15 +200,15 @@
         <!-- Transaction Flow Diagram -->
         <div class="card" style="margin-bottom:24px" id="flow-section">
           <div class="section-header">
-            <div>
+            <div style="position:relative;z-index:1">
               <div class="section-title">Transaction Money Trail Flow</div>
-              <div style="font-size:12px;color:var(--text-dim)" id="flow-title">Select any row from the exception table to inspect payment lifecycle</div>
+              <div style="font-size:12px;color:var(--text-dim);margin-top:4px" id="flow-title">Select any row from the exception table to inspect payment lifecycle</div>
             </div>
           </div>
           <div class="flow-container" id="flow-container">
-            <div style="text-align:center;padding:30px;color:var(--text-dim)" id="flow-empty">
-              <div style="font-size:32px;opacity:0.3;margin-bottom:8px">💳</div>
-              <p style="font-size:13px">Click "View" on any transaction above to render its exact Money Trail</p>
+            <div style="text-align:center;padding:36px;color:var(--text-dim);position:relative;z-index:1" id="flow-empty">
+              <div style="font-size:36px;opacity:0.25;margin-bottom:10px">💳</div>
+              <p style="font-size:13px;line-height:1.7">Click "View" on any transaction above to render its exact Money Trail</p>
             </div>
             <div id="flow-content" style="display:none"></div>
           </div>
@@ -221,17 +222,17 @@
   <!-- ============================================================ SETTINGS PAGE -->
   <div id="page-settings" class="page">
     <div class="main-content">
-      <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;letter-spacing:-0.02em">⚙️ Integration & Bank Ingestion Settings</h2>
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:24px;letter-spacing:-0.03em">⚙️ Integration & Bank Ingestion Settings</h2>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <!-- Razorpay Connection -->
         <div class="card">
-          <div class="section-title" style="margin-bottom:4px">Razorpay API Credentials</div>
-          <div class="card-subtitle" style="margin-bottom:16px">Connect your Razorpay Test Mode API keys to pull live transactions</div>
-          <div id="razorpay-status" class="connection-status disconnected" style="margin-bottom:16px;padding:10px 14px;border-radius:6px;font-size:12px;font-weight:600">
+          <div class="section-title" style="margin-bottom:4px;position:relative;z-index:1">Razorpay API Credentials</div>
+          <div class="card-subtitle" style="margin-bottom:18px;position:relative;z-index:1">Connect your Razorpay Test Mode API keys to pull live transactions</div>
+          <div id="razorpay-status" class="connection-status disconnected" style="margin-bottom:18px;position:relative;z-index:1">
             ⊘ Not connected
           </div>
-          <form id="razorpay-form" onsubmit="connectRazorpay(event)">
+          <form id="razorpay-form" onsubmit="connectRazorpay(event)" style="position:relative;z-index:1">
             <div class="form-group">
               <label class="form-label">Key ID</label>
               <input class="form-input mono" type="text" id="rz-key-id" placeholder="rzp_test_...">
@@ -242,18 +243,18 @@
             </div>
             <button type="submit" class="btn btn-primary">Connect Razorpay</button>
           </form>
-          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-subtle)">
+          <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border-subtle);position:relative;z-index:1">
             <button class="btn btn-secondary btn-sm" onclick="fetchRazorpayData()">📥 Sync Razorpay Data</button>
-            <div id="razorpay-fetch-result" style="margin-top:8px;font-size:12px;color:var(--text-dim)"></div>
+            <div id="razorpay-fetch-result" style="margin-top:10px;font-size:12px;color:var(--text-dim)"></div>
           </div>
         </div>
 
         <!-- Bank Statement Upload -->
         <div class="card">
-          <div class="section-title" style="margin-bottom:4px">Multi-Bank Statement Ingestion</div>
-          <div class="card-subtitle" style="margin-bottom:16px">Upload bank statement CSV files (HDFC, ICICI, SBI, Axis, Kotak)</div>
+          <div class="section-title" style="margin-bottom:4px;position:relative;z-index:1">Multi-Bank Statement Ingestion</div>
+          <div class="card-subtitle" style="margin-bottom:18px;position:relative;z-index:1">Upload bank statement CSV files (HDFC, ICICI, SBI, Axis, Kotak)</div>
 
-          <div class="form-group">
+          <div class="form-group" style="position:relative;z-index:1">
             <label class="form-label">Bank Format (Optional)</label>
             <select class="form-input" id="bank-name-select">
               <option value="">Auto-Detect Format</option>
@@ -265,22 +266,22 @@
             </select>
           </div>
 
-          <div class="card" style="border:2px dashed var(--border-subtle);text-align:center;padding:30px;cursor:pointer" id="upload-area" onclick="document.getElementById('bank-file').click()">
-            <div style="font-size:36px;margin-bottom:8px;opacity:0.7">📄</div>
-            <div style="font-size:13px;font-weight:600;color:var(--text-main)">Click to browse or drop Bank CSV</div>
-            <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Auto-extracts UTRs and flags non-Razorpay gateways</div>
+          <div class="card" style="border:2px dashed rgba(79,142,255,0.2);text-align:center;padding:36px;cursor:pointer;position:relative;z-index:1" id="upload-area" onclick="document.getElementById('bank-file').click()">
+            <div style="font-size:40px;margin-bottom:10px;opacity:0.5">📄</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text-main)">Click to browse or drop Bank CSV</div>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:6px">Auto-extracts UTRs and flags non-Razorpay gateways</div>
             <input type="file" id="bank-file" accept=".csv" style="display:none" onchange="uploadBankStatement(this)">
           </div>
 
-          <ul id="upload-list" style="list-style:none;margin-top:14px"></ul>
+          <ul id="upload-list" style="list-style:none;margin-top:16px;position:relative;z-index:1"></ul>
         </div>
       </div>
 
       <!-- Execution Panel -->
       <div class="card" style="margin-top:20px">
-        <div class="section-title" style="margin-bottom:4px">Execute Engine</div>
-        <div class="card-subtitle" style="margin-bottom:16px">Process loaded data through the 5-level deterministic cascade</div>
-        <div style="display:flex;gap:12px">
+        <div class="section-title" style="margin-bottom:4px;position:relative;z-index:1">Execute Engine</div>
+        <div class="card-subtitle" style="margin-bottom:18px;position:relative;z-index:1">Process loaded data through the 5-level deterministic cascade</div>
+        <div style="display:flex;gap:12px;position:relative;z-index:1">
           <button class="btn btn-primary btn-lg" onclick="runReconciliation('live')" id="btn-run-live">
             🚀 Execute Live Reconciliation
           </button>
@@ -292,32 +293,41 @@
     </div>
   </div>
   <!-- ============================================================ RECON QA AGENT COPILOT CHAT WIDGET -->
+  <div class="overlay" id="copilot-overlay" onclick="toggleCopilot()"></div>
   <div class="chat-widget" id="copilot-panel">
     <div class="chat-header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:#ffffff;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:linear-gradient(135deg,#4F8EFF 0%,#7C5CFC 100%);border-radius:10px;box-shadow:0 2px 10px rgba(79,142,255,0.3)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21.9999 4H16.9999L14.9999 15H11.9999L13.9999 4H1.9999V8H9.2799L6.5499 23H11.5499L12.9999 15H19.9999L21.9999 4Z" fill="#3395ff"/>
+            <path d="M21.9999 4H16.9999L14.9999 15H11.9999L13.9999 4H1.9999V8H9.2799L6.5499 23H11.5499L12.9999 15H19.9999L21.9999 4Z" fill="white"/>
           </svg>
         </div>
         <div>
-          <div style="font-size:14px;font-weight:700;color:var(--text-main)">Razorpay Q&A Agent</div>
-          <div style="font-size:10px;color:var(--text-muted)">Strict Financial Data Assistant</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text-main);letter-spacing:-0.01em">Razorpay Q&A Agent</div>
+          <div style="font-size:10px;color:var(--text-dim);font-weight:500">Strict Financial Data Assistant</div>
         </div>
       </div>
-      <button style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;width:24px;height:24px" onclick="toggleCopilot()">✕</button>
+      <button style="background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;transition:all 0.15s ease" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'" onclick="toggleCopilot()">✕</button>
     </div>
     <div class="chat-messages" id="copilot-messages">
       <div class="chat-msg bot">
-        👋 **Hello! I am your Reconciliation Q&A Agent.**
+        👋 <strong>Hello! I'm your Reconciliation Q&A Agent.</strong>
         <br><br>
-        I am strictly bound to your reconciliation engine's outputs and financial calculations.
+        I answer questions using <strong>only</strong> your reconciliation engine's data — no guessing, no hallucination.
         <br><br>
-        Ask me anything about:<br>
-        • Total Amounts & Paid Volume<br>
-        • Tax & MDR Fee Segregation<br>
-        • Human Review & Unresolved Queues<br>
-        • Attributed Gap Causes
+        I can help with:<br>
+        💰 Payment volumes & net payouts<br>
+        🧾 Tax & MDR fee breakdown<br>
+        📊 State classification analysis<br>
+        🔍 Gap causes & variances<br>
+        🔎 Specific transaction lookup<br>
+        🎯 Accuracy & performance metrics
+      </div>
+      <div class="chat-suggestions">
+        <button class="chat-suggestion-chip" onclick="sendSuggestedQuestion('Give me a full summary')">Give me a full summary</button>
+        <button class="chat-suggestion-chip" onclick="sendSuggestedQuestion('How much was processed?')">How much was processed?</button>
+        <button class="chat-suggestion-chip" onclick="sendSuggestedQuestion('Any unresolved issues?')">Any unresolved issues?</button>
+        <button class="chat-suggestion-chip" onclick="sendSuggestedQuestion('Show tax & fee breakdown')">Show tax & fee breakdown</button>
       </div>
     </div>
     <div class="chat-input-area">
@@ -338,9 +348,9 @@
   <!-- Detail Modal -->
   <div class="modal-backdrop" id="txn-modal">
     <div class="modal" id="txn-modal-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <div style="font-size:16px;font-weight:700" id="txn-modal-title">Transaction Audit Detail</div>
-        <button style="background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer" onclick="closeModal()">✕</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-size:17px;font-weight:800;letter-spacing:-0.02em" id="txn-modal-title">Transaction Audit Detail</div>
+        <button style="background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all 0.15s ease" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'" onclick="closeModal()">✕</button>
       </div>
       <div id="txn-modal-body"></div>
     </div>
@@ -349,8 +359,8 @@
   <div class="toast" id="toast"></div>
 
   <div class="loading-overlay" id="loading" style="display:none">
-    <div class="spinner" style="width:32px;height:32px;border-width:3px"></div>
-    <div style="color:var(--text-muted);font-size:13px" id="loading-text">Processing Engine Cascade...</div>
+    <div class="spinner" style="width:36px;height:36px;border-width:3px"></div>
+    <div style="color:var(--text-dim);font-size:14px;font-weight:500" id="loading-text">Processing Engine Cascade...</div>
   </div>
 
 </div>

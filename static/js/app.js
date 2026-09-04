@@ -605,11 +605,39 @@ async function runReconciliation(mode) {
 // ================================================================ COPILOT
 let copilotOpen = false;
 
+const SUGGESTED_QUESTIONS = [
+  "Give me a full summary",
+  "How much was processed?",
+  "Show tax & fee breakdown",
+  "Any unresolved issues?",
+  "What's the largest gap?",
+  "Show confidence scores",
+  "Match quality report",
+  "Engine performance?",
+];
+
 function toggleCopilot() {
   copilotOpen = !copilotOpen;
   document.getElementById('copilot-panel').classList.toggle('open', copilotOpen);
-  document.getElementById('copilot-overlay').classList.toggle('visible', copilotOpen);
+  const overlay = document.getElementById('copilot-overlay');
+  if (overlay) overlay.classList.toggle('visible', copilotOpen);
   if (copilotOpen) document.getElementById('copilot-input').focus();
+}
+
+function sendSuggestedQuestion(question) {
+  document.getElementById('copilot-input').value = question;
+  sendCopilotMessage();
+}
+
+function renderSuggestedChips(container) {
+  // Pick 4 random suggestions
+  const shuffled = [...SUGGESTED_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 4);
+  const chipsHtml = `
+    <div class="chat-suggestions">
+      ${shuffled.map(q => `<button class="chat-suggestion-chip" onclick="sendSuggestedQuestion('${q}')">${q}</button>`).join('')}
+    </div>`;
+  container.innerHTML += chipsHtml;
+  container.scrollTop = container.scrollHeight;
 }
 
 async function sendCopilotMessage() {
@@ -618,13 +646,26 @@ async function sendCopilotMessage() {
   if (!question) return;
 
   const messages = document.getElementById('copilot-messages');
+
+  // Remove any existing suggestion chips
+  messages.querySelectorAll('.chat-suggestions').forEach(el => el.remove());
+
+  // Add user message
   messages.innerHTML += `<div class="chat-msg user">${escapeHtml(question)}</div>`;
   input.value = '';
   messages.scrollTop = messages.scrollHeight;
 
-  // Show typing indicator
+  // Show typing indicator with label
   const typingId = 'typing-' + Date.now();
-  messages.innerHTML += `<div class="chat-msg bot" id="${typingId}"><div class="spinner" style="width:16px;height:16px"></div></div>`;
+  messages.innerHTML += `
+    <div class="chat-msg bot chat-typing" id="${typingId}">
+      <div class="typing-indicator">
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="typing-label">Agent is thinking...</span>
+      </div>
+    </div>`;
   messages.scrollTop = messages.scrollHeight;
 
   try {
@@ -634,6 +675,9 @@ async function sendCopilotMessage() {
     });
     document.getElementById(typingId).remove();
     messages.innerHTML += `<div class="chat-msg bot">${formatCopilotResponse(res.answer)}</div>`;
+
+    // Add suggestion chips after response
+    renderSuggestedChips(messages);
   } catch (err) {
     document.getElementById(typingId).remove();
     messages.innerHTML += `<div class="chat-msg bot" style="color:var(--unresolved)">❌ ${err.message || 'Failed to get response'}</div>`;
@@ -642,11 +686,21 @@ async function sendCopilotMessage() {
 }
 
 function formatCopilotResponse(text) {
-  // Convert markdown-like formatting to HTML
   return text
+    // Horizontal rules
+    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border-subtle);margin:8px 0">')
+    // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`(.*?)`/g, '<code style="background:var(--bg-input);padding:1px 4px;border-radius:3px;font-size:11px">$1</code>')
+    // Inline code (backtick blocks like `code`)
+    .replace(/`([^`]+)`/g, '<code class="chat-code">$1</code>')
+    // Numbered lists
+    .replace(/^(\d+)\.\s/gm, '<span class="chat-list-num">$1.</span> ')
+    // Bullet points
+    .replace(/^  • /gm, '&nbsp;&nbsp;&bull; ')
     .replace(/^• /gm, '&bull; ')
+    // Bar chart characters — render them in monospace
+    .replace(/`([█░]+)`/g, '<code class="chat-bar">$1</code>')
+    // Newlines
     .replace(/\n/g, '<br>');
 }
 
