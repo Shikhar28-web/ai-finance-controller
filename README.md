@@ -7,9 +7,6 @@
 
 <br />
 
-<div align="center">
-  <img src="docs/hero.jpg" alt="AI Finance Controller Hero Image" width="800" />
-</div>
 
 # AI Finance Controller
 
